@@ -108,7 +108,8 @@ const Dashboard = () => {
   };
 
   const scheduledWishes = wishes.filter((w) => w.status === "scheduled");
-  const deliveredWishes = wishes.filter((w) => w.status === "delivered");
+  const sentWishes = wishes.filter((w) => w.status === "sent");
+  const failedWishes = wishes.filter((w) => w.status === "failed");
 
   const getPlanBadge = (plan: string) => {
     switch (plan) {
@@ -403,8 +404,8 @@ const Dashboard = () => {
                     <CheckCircle className="w-5 h-5 text-accent" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-foreground">{deliveredWishes.length}</div>
-                    <div className="text-xs text-muted-foreground">Delivered</div>
+                    <div className="text-2xl font-bold text-foreground">{sentWishes.length}</div>
+                    <div className="text-xs text-muted-foreground">Sent</div>
                   </div>
                 </div>
               </motion.div>
@@ -537,17 +538,17 @@ const Dashboard = () => {
               )}
             </motion.div>
 
-            {/* Delivered Wishes */}
-            {deliveredWishes.length > 0 && (
+            {/* Sent Wishes */}
+            {sentWishes.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft"
               >
-                <h3 className="font-bold text-lg text-foreground mb-4">✅ Delivered Wishes</h3>
+                <h3 className="font-bold text-lg text-foreground mb-4">✅ Sent Wishes</h3>
                 <div className="space-y-3">
-                  {deliveredWishes.slice(0, 3).map((wish) => (
+                  {sentWishes.slice(0, 3).map((wish) => (
                     <div
                       key={wish.id}
                       className="flex items-center justify-between p-4 rounded-xl border border-accent/20 bg-whatsapp-light"
