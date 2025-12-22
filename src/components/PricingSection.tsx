@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Crown, Star, X } from "lucide-react";
+import { Check, Sparkles, Crown, Star, X, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { initiatePayment } from "@/lib/razorpay";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 const plans = [
   {
@@ -22,7 +28,7 @@ const plans = [
     cta: "Start Free",
     variant: "outline" as const,
     popular: false,
-    planKey: "free",
+    planKey: "free" as const,
   },
   {
     name: "Basic",
@@ -43,7 +49,7 @@ const plans = [
     cta: "Get Basic",
     variant: "outline" as const,
     popular: false,
-    planKey: "basic",
+    planKey: "basic" as const,
   },
   {
     name: "Pro",
@@ -64,7 +70,7 @@ const plans = [
     cta: "Go Pro",
     variant: "hero" as const,
     popular: true,
-    planKey: "pro",
+    planKey: "pro" as const,
   },
   {
     name: "Premium",
@@ -85,18 +91,69 @@ const plans = [
     cta: "Go Premium",
     variant: "golden" as const,
     popular: false,
-    planKey: "premium",
+    planKey: "premium" as const,
   },
 ];
 
-const creditUsage = [
-  { feature: "Text Wish", emoji: "📝", credits: "2.5" },
-  { feature: "Image Attachment", emoji: "🖼️", credits: "+3" },
-  { feature: "Audio / Voice", emoji: "🔊", credits: "+4" },
-  { feature: "Video Greeting", emoji: "🎥", credits: "+5" },
-];
-
 const PricingSection = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handlePlanClick = async (planKey: "free" | "basic" | "pro" | "premium") => {
+    // Free plan - just go to auth/dashboard
+    if (planKey === "free") {
+      if (user) {
+        navigate("/dashboard");
+      } else {
+        navigate("/auth");
+      }
+      return;
+    }
+
+    // Paid plans - need to be logged in
+    if (!user) {
+      // Redirect to auth with plan parameter, will trigger payment after login
+      navigate(`/auth?plan=${planKey}`);
+      return;
+    }
+
+    // User is logged in - initiate payment directly
+    setLoadingPlan(planKey);
+    
+    try {
+      // Get user profile for name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .single();
+
+      await initiatePayment({
+        plan: planKey,
+        userId: user.id,
+        userEmail: user.email || "",
+        userName: profile?.display_name || "",
+        onSuccess: (upgradedPlan, credits) => {
+          toast({
+            title: "🎉 Payment Successful!",
+            description: `Welcome to ${upgradedPlan.charAt(0).toUpperCase() + upgradedPlan.slice(1)}! ${credits} credits added.`,
+          });
+          setLoadingPlan(null);
+          navigate("/dashboard");
+        },
+        onError: (error) => {
+          toast({ title: "Payment Failed", description: error, variant: "destructive" });
+          setLoadingPlan(null);
+        },
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to initiate payment", variant: "destructive" });
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <section id="pricing" className="py-24 bg-gradient-pricing">
       <div className="container mx-auto px-4">
@@ -105,7 +162,7 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-6"
+          className="text-center mb-12"
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-light border border-primary/20 mb-4">
             <span className="text-sm font-medium text-primary">Simple Pricing</span>
@@ -113,34 +170,9 @@ const PricingSection = () => {
           <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Choose Your Plan
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             🎁 Start free with 10 credits — upgrade when you need more magic.
           </p>
-        </motion.div>
-
-        {/* Credit Usage Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-2xl mx-auto mb-12"
-        >
-          <div className="bg-card rounded-xl p-6 border border-border/50">
-            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-              🪙 Credit Usage
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {creditUsage.map((item) => (
-                <div key={item.feature} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <span className="text-sm text-foreground flex items-center gap-2">
-                    <span>{item.emoji}</span>
-                    {item.feature}
-                  </span>
-                  <span className="text-sm font-bold text-primary">{item.credits} credits</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </motion.div>
 
         {/* Pricing Cards */}
@@ -228,67 +260,17 @@ const PricingSection = () => {
                 className={`w-full ${
                   plan.name === "Premium" ? "bg-gold hover:bg-gold/90 text-foreground" : ""
                 }`}
-                onClick={() => {
-                  if (plan.planKey === "free") {
-                    window.location.href = "/auth";
-                  } else {
-                    window.location.href = `/auth?plan=${plan.planKey}`;
-                  }
-                }}
+                onClick={() => handlePlanClick(plan.planKey)}
+                disabled={loadingPlan === plan.planKey}
               >
+                {loadingPlan === plan.planKey ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
                 {plan.cta}
               </Button>
             </motion.div>
           ))}
         </div>
-
-        {/* Value Comparison */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-3xl mx-auto mt-12"
-        >
-          <div className="bg-card rounded-xl p-6 border border-border/50">
-            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-              📊 Value Comparison
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left py-2 text-muted-foreground font-medium">Pack</th>
-                    <th className="text-center py-2 text-muted-foreground font-medium">Price</th>
-                    <th className="text-center py-2 text-muted-foreground font-medium">Credits</th>
-                    <th className="text-center py-2 text-muted-foreground font-medium">₹ / Credit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-border/30">
-                    <td className="py-3 text-foreground">Basic</td>
-                    <td className="py-3 text-center text-foreground">₹49</td>
-                    <td className="py-3 text-center text-foreground">15</td>
-                    <td className="py-3 text-center text-foreground">₹3.26</td>
-                  </tr>
-                  <tr className="border-b border-border/30">
-                    <td className="py-3 text-foreground flex items-center gap-1">
-                      Pro <Star className="w-3 h-3 text-gold" />
-                    </td>
-                    <td className="py-3 text-center text-foreground">₹99</td>
-                    <td className="py-3 text-center text-foreground">35</td>
-                    <td className="py-3 text-center text-foreground">₹2.83</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 text-foreground">Premium</td>
-                    <td className="py-3 text-center text-foreground">₹199</td>
-                    <td className="py-3 text-center text-foreground">80</td>
-                    <td className="py-3 text-center text-primary font-bold">₹2.48</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

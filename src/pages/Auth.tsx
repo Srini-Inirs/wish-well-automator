@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Sparkles, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { initiatePayment } from "@/lib/razorpay";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,15 +17,58 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const planFromUrl = searchParams.get("plan") as "basic" | "pro" | "premium" | null;
 
+  // Handle payment after login if plan parameter exists
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+    const handlePaymentAfterAuth = async () => {
+      if (user && planFromUrl && ["basic", "pro", "premium"].includes(planFromUrl)) {
+        setIsProcessingPayment(true);
+        
+        try {
+          // Get user profile for name
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("display_name")
+            .eq("user_id", user.id)
+            .single();
+
+          await initiatePayment({
+            plan: planFromUrl,
+            userId: user.id,
+            userEmail: user.email || "",
+            userName: profile?.display_name || "",
+            onSuccess: (upgradedPlan, credits) => {
+              toast({
+                title: "🎉 Payment Successful!",
+                description: `Welcome to ${upgradedPlan.charAt(0).toUpperCase() + upgradedPlan.slice(1)}! ${credits} credits added.`,
+              });
+              setIsProcessingPayment(false);
+              navigate("/dashboard");
+            },
+            onError: (error) => {
+              toast({ title: "Payment Failed", description: error, variant: "destructive" });
+              setIsProcessingPayment(false);
+              navigate("/dashboard");
+            },
+          });
+        } catch (error) {
+          toast({ title: "Error", description: "Failed to initiate payment", variant: "destructive" });
+          setIsProcessingPayment(false);
+          navigate("/dashboard");
+        }
+      } else if (user && !planFromUrl) {
+        navigate("/dashboard");
+      }
+    };
+
+    handlePaymentAfterAuth();
+  }, [user, planFromUrl, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +85,7 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Welcome back! ✨", description: "You've successfully logged in." });
-          navigate("/dashboard");
+          // Navigation handled by useEffect after user state updates
         }
       } else {
         const { error } = await signUp(email, password, fullName);
@@ -56,7 +100,7 @@ const Auth = () => {
             title: "Account Created! 🎉",
             description: "Welcome to WishBot! You've received 10 free credits.",
           });
-          navigate("/dashboard");
+          // Navigation handled by useEffect after user state updates
         }
       }
     } finally {
@@ -67,10 +111,15 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
+      // Include plan in redirect URL if present
+      const redirectUrl = planFromUrl 
+        ? `${window.location.origin}/auth?plan=${planFromUrl}`
+        : `${window.location.origin}/dashboard`;
+        
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
         },
       });
       if (error) {
@@ -90,6 +139,18 @@ const Auth = () => {
       setIsGoogleLoading(false);
     }
   };
+
+  // Show loading state while processing payment
+  if (isProcessingPayment) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">Processing payment...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -130,6 +191,15 @@ const Auth = () => {
           <p className="text-muted-foreground text-center mb-6">
             {isLogin ? "Sign in to manage your wishes" : "Create an account & get 10 free credits!"}
           </p>
+
+          {/* Plan Badge if coming from pricing */}
+          {planFromUrl && (
+            <div className="mb-4 p-3 bg-primary/10 rounded-lg text-center">
+              <p className="text-sm text-primary font-medium">
+                🎉 You're signing up for the <span className="font-bold capitalize">{planFromUrl}</span> plan!
+              </p>
+            </div>
+          )}
 
           {/* Google Sign In Button */}
           <Button
