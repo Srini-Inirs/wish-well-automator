@@ -38,7 +38,8 @@ serve(async (req) => {
     }
 
     const planDetails = PLANS[plan as keyof typeof PLANS];
-    const receipt = `order_${userId}_${Date.now()}`;
+    // Receipt max 40 chars - use shortened format
+    const receipt = `${plan}_${Date.now()}`;
 
     // Create Razorpay order
     const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
