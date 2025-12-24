@@ -1,47 +1,56 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Bird, Heart, Users, Zap, Globe } from "lucide-react";
+import PageLayout from "@/components/PageLayout";
+import { Bird, Heart, Zap, Users, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-24">
-        {/* Hero */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+    <PageLayout 
+      title="About WishBird" 
+      subtitle="Making celebrations unforgettable, one wish at a time"
+    >
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <motion.section 
+          className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-3xl p-8 border border-border/50"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
         >
-          <div className="w-20 h-20 rounded-2xl bg-gradient-cta flex items-center justify-center mx-auto mb-6 shadow-glow">
-            <Bird className="w-10 h-10 text-primary-foreground" />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-cta flex items-center justify-center shadow-glow">
+              <Bird className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">WishBird</h2>
+              <p className="text-muted-foreground">by 16xstudios</p>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">About WishBird</h1>
-          <p className="text-xl text-muted-foreground">
-            Making moments magical with AI-powered WhatsApp greetings. Never miss wishing someone again.
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            WishBird is an innovative platform that helps you never miss an important celebration. 
+            Schedule personalized WhatsApp greetings for birthdays, anniversaries, and special occasions 
+            with AI-powered messages that feel genuinely heartfelt.
           </p>
-        </motion.div>
+        </motion.section>
 
         {/* Story */}
         <motion.section 
+          className="bg-card/50 rounded-2xl p-6 border border-border/50"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="max-w-4xl mx-auto mb-16"
+          transition={{ delay: 0.4 }}
         >
-          <h2 className="text-3xl font-bold text-foreground mb-6 text-center">Our Story</h2>
-          <div className="bg-card rounded-2xl p-8 border border-border/50">
-            <p className="text-muted-foreground mb-4">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">Our Story</h2>
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>
               WishBird was born from a simple problem — we kept forgetting to wish our loved ones on their special days. 
               Birthdays, anniversaries, festivals — life gets busy, and those important moments slip away.
             </p>
-            <p className="text-muted-foreground mb-4">
+            <p>
               We built WishBird to solve this. Schedule your wishes in advance, personalize them with AI, 
               and let us deliver them right on time via WhatsApp. It's like having a personal assistant 
               dedicated to keeping your relationships warm.
             </p>
-            <p className="text-muted-foreground">
+            <p>
               Today, WishBird has helped thousands of users send heartfelt messages across India, 
               making celebrations more special, one wish at a time.
             </p>
@@ -52,13 +61,12 @@ const About = () => {
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-4xl mx-auto mb-16"
+          transition={{ delay: 0.5 }}
         >
-          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">What We Believe</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">What We Believe</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-card rounded-xl p-6 border border-border/50 text-center">
-              <div className="w-12 h-12 rounded-xl bg-indigo-light flex items-center justify-center mx-auto mb-4">
+            <div className="bg-card/50 rounded-2xl p-6 border border-border/50 text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Heart className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Connection Matters</h3>
@@ -66,8 +74,8 @@ const About = () => {
                 Small gestures create big impacts. A timely wish can brighten someone's entire day.
               </p>
             </div>
-            <div className="bg-card rounded-xl p-6 border border-border/50 text-center">
-              <div className="w-12 h-12 rounded-xl bg-indigo-light flex items-center justify-center mx-auto mb-4">
+            <div className="bg-card/50 rounded-2xl p-6 border border-border/50 text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Technology for Good</h3>
@@ -75,8 +83,8 @@ const About = () => {
                 AI should help us be more human, not less. We use it to make your messages more personal.
               </p>
             </div>
-            <div className="bg-card rounded-xl p-6 border border-border/50 text-center">
-              <div className="w-12 h-12 rounded-xl bg-indigo-light flex items-center justify-center mx-auto mb-4">
+            <div className="bg-card/50 rounded-2xl p-6 border border-border/50 text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Simplicity First</h3>
@@ -87,31 +95,38 @@ const About = () => {
           </div>
         </motion.section>
 
-        {/* Company */}
+        {/* Company Info */}
         <motion.section 
+          className="bg-card/50 rounded-2xl p-6 border border-border/50"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="max-w-4xl mx-auto"
+          transition={{ delay: 0.6 }}
         >
-          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">The Team</h2>
-          <div className="bg-card rounded-2xl p-8 border border-border/50 text-center">
-            <div className="w-16 h-16 rounded-xl bg-gradient-cta flex items-center justify-center mx-auto mb-4">
-              <Globe className="w-8 h-8 text-primary-foreground" />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-cta flex items-center justify-center">
+              <Globe className="w-6 h-6 text-primary-foreground" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-2">16xstudios</h3>
-            <p className="text-muted-foreground mb-4">
-              A passionate team building products that make life a little more magical.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              📍 Hosur - 635126, Tamilnadu, India<br />
-              🌐 16xstudios.space
-            </p>
+            <h2 className="text-2xl font-semibold text-foreground">About 16xstudios</h2>
+          </div>
+          <p className="text-muted-foreground leading-relaxed mb-6">
+            16xstudios is a technology company focused on building products that enhance human connections. 
+            Based in Hosur, Tamil Nadu, we're passionate about creating tools that make life simpler and relationships stronger.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-6 text-muted-foreground">
+            <div className="bg-background/50 rounded-xl p-4">
+              <strong className="text-foreground block mb-2">📍 Location</strong>
+              Hosur - 635126<br />
+              Tamilnadu, India
+            </div>
+            <div className="bg-background/50 rounded-xl p-4">
+              <strong className="text-foreground block mb-2">📧 Contact</strong>
+              support@16xstudios.space<br />
+              +91 7871282354
+            </div>
           </div>
         </motion.section>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

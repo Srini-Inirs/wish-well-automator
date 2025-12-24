@@ -1,145 +1,190 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Bird, Mail, Phone, MapPin, MessageSquare } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Mail, Phone, MapPin, Send, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 const Contact = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast({
+      title: "Message Sent!",
+      description: "We'll get back to you as soon as possible.",
+    });
+    
+    setIsSubmitting(false);
+    (e.target as HTMLFormElement).reset();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-24">
-        {/* Hero */}
+    <PageLayout 
+      title="Get in Touch" 
+      subtitle="Have questions? We'd love to hear from you"
+    >
+      <div className="grid lg:grid-cols-2 gap-12">
+        {/* Contact Form */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="bg-card/50 rounded-2xl p-8 border border-border/50"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Get in Touch</h1>
-          <p className="text-xl text-muted-foreground">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
-          </p>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Send us a message</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="Your name" 
+                  required 
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="your@email.com" 
+                  required 
+                  className="bg-background/50"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject</Label>
+              <Input 
+                id="subject" 
+                placeholder="How can we help?" 
+                required 
+                className="bg-background/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea 
+                id="message" 
+                placeholder="Tell us more about your inquiry..." 
+                rows={5} 
+                required 
+                className="bg-background/50 resize-none"
+              />
+            </div>
+            <Button type="submit" variant="hero" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                "Sending..."
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Message
+                </>
+              )}
+            </Button>
+          </form>
         </motion.div>
 
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-          {/* Contact Info */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="bg-card rounded-2xl p-8 border border-border/50 h-full">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-cta flex items-center justify-center mb-6 shadow-glow">
-                <Bird className="w-8 h-8 text-primary-foreground" />
+        {/* Contact Info */}
+        <motion.div 
+          className="space-y-6"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="bg-card/50 rounded-2xl p-6 border border-border/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Mail className="w-6 h-6 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Contact Information</h2>
-              
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-light flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:support@16xstudios.space" className="text-muted-foreground hover:text-primary transition-colors">
-                      support@16xstudios.space
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-light flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Phone</h3>
-                    <a href="tel:+917871282354" className="text-muted-foreground hover:text-primary transition-colors">
-                      +91 7871282354
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-light flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Address</h3>
-                    <p className="text-muted-foreground">
-                      Hosur - 635126<br />
-                      Tamilnadu, India
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-light flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Company</h3>
-                    <p className="text-muted-foreground">16xstudios</p>
-                    <a href="https://16xstudios.space" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
-                      16xstudios.space
-                    </a>
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Email Us</h3>
+                <p className="text-muted-foreground mb-2">For general inquiries and support</p>
+                <a 
+                  href="mailto:support@16xstudios.space" 
+                  className="text-primary hover:underline font-medium"
+                >
+                  support@16xstudios.space
+                </a>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Quick Actions */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="bg-card rounded-2xl p-8 border border-border/50 h-full">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Quick Links</h2>
-              
-              <div className="space-y-4">
-                <div className="bg-background rounded-xl p-4 border border-border/50">
-                  <h3 className="font-semibold text-foreground mb-2">🎁 Need Help with Your Wish?</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Check our FAQ or reach out for assistance with scheduling or delivery issues.
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@16xstudios.space?subject=Help with my wish">Email Support</a>
-                  </Button>
-                </div>
-
-                <div className="bg-background rounded-xl p-4 border border-border/50">
-                  <h3 className="font-semibold text-foreground mb-2">💳 Billing Questions?</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    For payment or subscription inquiries, our team is here to help.
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@16xstudios.space?subject=Billing inquiry">Contact Billing</a>
-                  </Button>
-                </div>
-
-                <div className="bg-background rounded-xl p-4 border border-border/50">
-                  <h3 className="font-semibold text-foreground mb-2">🤝 Partnership Opportunities</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Interested in partnering with WishBird? Let's talk!
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@16xstudios.space?subject=Partnership inquiry">Reach Out</a>
-                  </Button>
-                </div>
+          <div className="bg-card/50 rounded-2xl p-6 border border-border/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Phone className="w-6 h-6 text-primary" />
               </div>
-
-              <div className="mt-8 p-4 bg-gradient-cta/10 rounded-xl border border-primary/20">
-                <p className="text-sm text-muted-foreground text-center">
-                  Average response time: <span className="text-foreground font-semibold">Under 24 hours</span>
-                </p>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Call Us</h3>
+                <p className="text-muted-foreground mb-2">Mon-Sat from 9am to 6pm IST</p>
+                <a 
+                  href="tel:+917871282354" 
+                  className="text-primary hover:underline font-medium"
+                >
+                  +91 7871282354
+                </a>
               </div>
             </div>
-          </motion.div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+          </div>
+
+          <div className="bg-card/50 rounded-2xl p-6 border border-border/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Visit Us</h3>
+                <p className="text-muted-foreground mb-2">Our office location</p>
+                <address className="text-foreground not-italic">
+                  16xstudios<br />
+                  Hosur - 635126<br />
+                  Tamilnadu, India
+                </address>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card/50 rounded-2xl p-6 border border-border/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Company</h3>
+                <p className="text-muted-foreground mb-2">16xstudios</p>
+                <a 
+                  href="https://16xstudios.space" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-primary hover:underline font-medium"
+                >
+                  16xstudios.space
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 border border-border/50">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Quick Response</h3>
+            <p className="text-muted-foreground">
+              We typically respond within 24 hours. For urgent matters, please call us directly.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </PageLayout>
   );
 };
 

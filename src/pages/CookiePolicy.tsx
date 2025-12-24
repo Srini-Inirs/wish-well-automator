@@ -1,87 +1,99 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import PageLayout from "@/components/PageLayout";
 
 const CookiePolicy = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-24 max-w-4xl">
-        <h1 className="text-4xl font-bold text-foreground mb-8">Cookie Policy</h1>
-        <p className="text-muted-foreground mb-6">Last updated: {new Date().toLocaleDateString()}</p>
-        
-        <div className="prose prose-invert max-w-none space-y-6">
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">1. What Are Cookies</h2>
-            <p className="text-muted-foreground">
-              Cookies are small text files stored on your device when you visit a website. 
-              They help websites remember your preferences and improve your browsing experience.
-            </p>
-          </section>
+    <PageLayout 
+      title="Cookie Policy" 
+      subtitle={`Last updated: ${new Date().toLocaleDateString()}`}
+    >
+      <div className="prose prose-invert max-w-none space-y-8">
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">1. What Are Cookies</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Cookies are small text files that are stored on your computer or mobile device when you visit our website. 
+            They help us provide you with a better experience by remembering your preferences and how you use our service.
+          </p>
+        </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">2. How We Use Cookies</h2>
-            <p className="text-muted-foreground mb-3">WishBird uses cookies for:</p>
-            <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li><strong>Essential Cookies:</strong> Required for authentication and security</li>
-              <li><strong>Functional Cookies:</strong> Remember your preferences and settings</li>
-              <li><strong>Analytics Cookies:</strong> Help us understand how users interact with our service</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">3. Types of Cookies We Use</h2>
-            <div className="bg-card rounded-lg p-4 border border-border">
-              <table className="w-full text-muted-foreground">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 text-foreground">Cookie</th>
-                    <th className="text-left py-2 text-foreground">Purpose</th>
-                    <th className="text-left py-2 text-foreground">Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-border/50">
-                    <td className="py-2">sb-auth-token</td>
-                    <td className="py-2">User authentication</td>
-                    <td className="py-2">Session</td>
-                  </tr>
-                  <tr className="border-b border-border/50">
-                    <td className="py-2">preferences</td>
-                    <td className="py-2">User settings</td>
-                    <td className="py-2">1 year</td>
-                  </tr>
-                </tbody>
-              </table>
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">2. Types of Cookies We Use</h2>
+          <div className="space-y-4">
+            <div className="bg-background/50 rounded-xl p-4">
+              <h3 className="text-lg font-medium text-foreground mb-2">Essential Cookies</h3>
+              <p className="text-muted-foreground">Required for the website to function properly. These cannot be disabled.</p>
             </div>
-          </section>
+            <div className="bg-background/50 rounded-xl p-4">
+              <h3 className="text-lg font-medium text-foreground mb-2">Authentication Cookies</h3>
+              <p className="text-muted-foreground">Keep you logged in and remember your session.</p>
+            </div>
+            <div className="bg-background/50 rounded-xl p-4">
+              <h3 className="text-lg font-medium text-foreground mb-2">Preference Cookies</h3>
+              <p className="text-muted-foreground">Remember your settings and preferences for a better experience.</p>
+            </div>
+            <div className="bg-background/50 rounded-xl p-4">
+              <h3 className="text-lg font-medium text-foreground mb-2">Analytics Cookies</h3>
+              <p className="text-muted-foreground">Help us understand how visitors interact with our website.</p>
+            </div>
+          </div>
+        </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">4. Managing Cookies</h2>
-            <p className="text-muted-foreground">
-              You can control cookies through your browser settings. Note that disabling essential cookies 
-              may affect the functionality of our service, including the ability to log in.
-            </p>
-          </section>
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">3. Cookie Details</h2>
+          <div className="bg-background/50 rounded-xl overflow-hidden">
+            <table className="w-full text-muted-foreground">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-foreground font-semibold">Cookie</th>
+                  <th className="text-left py-3 px-4 text-foreground font-semibold">Purpose</th>
+                  <th className="text-left py-3 px-4 text-foreground font-semibold">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="py-3 px-4">sb-auth-token</td>
+                  <td className="py-3 px-4">User authentication</td>
+                  <td className="py-3 px-4">Session</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-3 px-4">preferences</td>
+                  <td className="py-3 px-4">User settings</td>
+                  <td className="py-3 px-4">1 year</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">5. Third-Party Cookies</h2>
-            <p className="text-muted-foreground">
-              We use Razorpay for payment processing, which may set its own cookies. 
-              Please refer to Razorpay's cookie policy for more information.
-            </p>
-          </section>
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">4. Third-Party Cookies</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            We may use third-party services that set their own cookies, including:
+          </p>
+          <ul className="list-disc list-inside text-muted-foreground space-y-2 mt-3">
+            <li>Razorpay for payment processing</li>
+            <li>Analytics services to improve our platform</li>
+          </ul>
+        </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-foreground mb-4">6. Contact</h2>
-            <p className="text-muted-foreground">
-              For questions about our cookie policy, contact us at:<br />
-              Email: support@16xstudios.space
-            </p>
-          </section>
-        </div>
-      </main>
-      <Footer />
-    </div>
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">5. Managing Cookies</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            You can control and manage cookies through your browser settings. Please note that removing or blocking 
+            cookies may impact your user experience and some features may not function properly.
+          </p>
+        </section>
+
+        <section className="bg-card/50 rounded-2xl p-6 border border-border/50">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">6. Contact Us</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            If you have questions about our Cookie Policy, contact us at:<br />
+            <strong className="text-foreground">Email:</strong> support@16xstudios.space<br />
+            <strong className="text-foreground">Phone:</strong> +91 7871282354<br />
+            <strong className="text-foreground">Address:</strong> Hosur - 635126, Tamilnadu, India
+          </p>
+        </section>
+      </div>
+    </PageLayout>
   );
 };
 
