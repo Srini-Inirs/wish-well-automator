@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Bird, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { initiatePayment } from "@/lib/razorpay";
+
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
