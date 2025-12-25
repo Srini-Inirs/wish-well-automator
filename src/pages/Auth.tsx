@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bird, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { initiatePayment } from "@/lib/razorpay";
-
+import wishbirdLogo from "@/assets/wishbird-logo.png";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -180,9 +180,7 @@ const Auth = () => {
         <div className="bg-card rounded-2xl p-8 shadow-card border border-border/50">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-cta flex items-center justify-center shadow-button">
-              <Bird className="w-6 h-6 text-primary-foreground" />
-            </div>
+            <img src={wishbirdLogo} alt="WishBird" className="w-12 h-12 object-contain" />
             <span className="text-2xl font-bold text-foreground">WishBird</span>
           </div>
 

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bird } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
+
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,9 +30,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-cta flex items-center justify-center shadow-button group-hover:shadow-glow transition-shadow">
-              <Bird className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={wishbirdLogo} alt="WishBird" className="w-10 h-10 object-contain" />
             <span className="font-bold text-xl text-foreground">WishBird</span>
           </Link>
 

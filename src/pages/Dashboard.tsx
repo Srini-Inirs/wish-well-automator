@@ -17,7 +17,6 @@ import { initiatePayment } from "@/lib/razorpay";
 import { PLANS, type PlanType } from "@/lib/credits";
 
 import {
-  Bird,
   Plus,
   Calendar,
   CheckCircle,
@@ -39,6 +38,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PlanSelectDialog } from "@/components/PlanSelectDialog";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
+
 
 interface Wish {
   id: string;
@@ -221,7 +222,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Bird className="w-8 h-8 text-primary animate-pulse" />
+        <img src={wishbirdLogo} alt="Loading..." className="w-12 h-12 animate-pulse" />
       </div>
     );
   }
@@ -232,9 +233,7 @@ const Dashboard = () => {
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-cta flex items-center justify-center shadow-button">
-              <Bird className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={wishbirdLogo} alt="WishBird" className="w-10 h-10 object-contain" />
             <span className="font-bold text-xl text-foreground">WishBird</span>
           </Link>
 
@@ -537,7 +536,7 @@ const Dashboard = () => {
 
               {loadingWishes ? (
                 <div className="text-center py-8">
-                  <Bird className="w-8 h-8 text-primary animate-pulse mx-auto" />
+                  <img src={wishbirdLogo} alt="Loading..." className="w-8 h-8 animate-pulse mx-auto" />
                 </div>
               ) : scheduledWishes.length === 0 ? (
                 <div className="text-center py-8">

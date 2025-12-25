@@ -1,5 +1,6 @@
-import { Bird, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
 
 const Footer = () => {
   const links = {
@@ -27,9 +28,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-cta flex items-center justify-center shadow-button">
-                <Bird className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={wishbirdLogo} alt="WishBird" className="w-10 h-10 object-contain" />
               <span className="font-bold text-xl text-foreground">WishBird</span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-xs">
