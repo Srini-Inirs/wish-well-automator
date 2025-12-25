@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Bird, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -98,7 +98,7 @@ const Auth = () => {
         } else {
           toast({
             title: "Account Created! 🎉",
-            description: "Welcome to WishBot! You've received 10 free credits.",
+            description: "Welcome to WishBird! You've received 10 free credits.",
           });
           // Navigation handled by useEffect after user state updates
         }
@@ -180,13 +180,13 @@ const Auth = () => {
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className="w-12 h-12 rounded-xl bg-gradient-cta flex items-center justify-center shadow-button">
-              <Sparkles className="w-6 h-6 text-primary-foreground" />
+              <Bird className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-foreground">WishBot</span>
+            <span className="text-2xl font-bold text-foreground">WishBird</span>
           </div>
 
           <h1 className="text-2xl font-bold text-foreground text-center mb-2">
-            {isLogin ? "Welcome Back! 💜" : "Join WishBot ✨"}
+            {isLogin ? "Welcome Back! 💜" : "Join WishBird ✨"}
           </h1>
           <p className="text-muted-foreground text-center mb-6">
             {isLogin ? "Sign in to manage your wishes" : "Create an account & get 10 free credits!"}
