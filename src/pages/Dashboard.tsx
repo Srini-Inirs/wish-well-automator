@@ -12,9 +12,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { initiatePayment } from "@/lib/razorpay";
 import { PLANS, type PlanType } from "@/lib/credits";
+
 import {
   Bird,
   Plus,
