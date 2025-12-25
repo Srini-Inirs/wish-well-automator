@@ -69,7 +69,7 @@ const UseCasesSection = () => {
             Perfect for Every Moment
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            From personal celebrations to business relationships — WishBot has you covered ✨
+            From personal celebrations to business relationships — WishBird has you covered ✨
           </p>
         </motion.div>
 

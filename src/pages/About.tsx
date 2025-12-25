@@ -1,7 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Bird, Heart, Users, Zap, Globe } from "lucide-react";
+import { Heart, Users, Zap, Globe } from "lucide-react";
 import { motion } from "framer-motion";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
 
 const About = () => {
   return (
@@ -14,9 +15,7 @@ const About = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="w-20 h-20 rounded-2xl bg-gradient-cta flex items-center justify-center mx-auto mb-6 shadow-glow">
-            <Bird className="w-10 h-10 text-primary-foreground" />
-          </div>
+          <img src={wishbirdLogo} alt="WishBird" className="w-20 h-20 object-contain mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">About WishBird</h1>
           <p className="text-xl text-muted-foreground">
             Making moments magical with AI-powered WhatsApp greetings. Never miss wishing someone again.

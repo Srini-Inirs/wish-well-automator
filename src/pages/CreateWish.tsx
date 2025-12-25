@@ -19,7 +19,6 @@ import MediaUpload from "@/components/MediaUpload";
 
 import WhatsAppLivePreview from "@/components/WhatsAppLivePreview";
 import {
-  Sparkles,
   ArrowLeft,
   User,
   Phone,
@@ -33,6 +32,8 @@ import {
   Coins,
 } from "lucide-react";
 import { CREDIT_COSTS, PLANS, calculateWishCredits, canUseFeature, type PlanType } from "@/lib/credits";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
+
 
 const occasions = [
   "Birthday",
@@ -345,7 +346,7 @@ const CreateWish = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+        <img src={wishbirdLogo} alt="Loading..." className="w-12 h-12 animate-pulse" />
       </div>
     );
   }
@@ -361,10 +362,8 @@ const CreateWish = () => {
               Back
             </Button>
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-cta flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-lg text-foreground">WishBot</span>
+              <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
+              <span className="font-bold text-lg text-foreground">WishBird</span>
             </Link>
           </div>
           <div className="flex items-center gap-3">
@@ -434,7 +433,7 @@ const CreateWish = () => {
               Create a Magical Wish ✨
             </h1>
             <p className="text-muted-foreground mb-8">
-              Fill in the details and let WishBot deliver your heartfelt greeting.
+              Fill in the details and let WishBird deliver your heartfelt greeting.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6">

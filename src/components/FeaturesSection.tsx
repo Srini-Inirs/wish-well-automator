@@ -84,7 +84,7 @@ const FeaturesSection = () => {
             <span className="text-sm font-medium text-pink-vibrant">Loved by Thousands</span>
           </span>
           <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Why People Love WishBot
+            Why People Love WishBird
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Everything you need to create unforgettable moments for your loved ones ✨
