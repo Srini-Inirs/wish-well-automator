@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Bird, Heart, MessageCircle, Calendar, Send, Sparkles } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Send, Sparkles } from "lucide-react";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
+
 const HeroSection = () => {
   const navigate = useNavigate();
   return <section className="relative min-h-screen pt-24 pb-16 overflow-hidden">
@@ -107,8 +109,8 @@ const HeroSection = () => {
               <div className="bg-whatsapp-light rounded-[2.5rem] overflow-hidden">
                 {/* WhatsApp Header */}
                 <div className="bg-whatsapp px-4 py-3 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-                    <Bird className="w-5 h-5 text-primary-foreground" />
+                  <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center overflow-hidden">
+                    <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="flex-1">
                     <div className="text-primary-foreground font-semibold text-sm">WishBird</div>

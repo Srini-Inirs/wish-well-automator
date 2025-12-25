@@ -1,4 +1,5 @@
-import { Sparkles, Video, Music } from "lucide-react";
+import { Video, Music } from "lucide-react";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
 
 interface WhatsAppLivePreviewProps {
   recipientName: string;
@@ -41,11 +42,11 @@ const WhatsAppLivePreview = ({
       <div className="bg-whatsapp-light rounded-[1.5rem] overflow-hidden">
         {/* WhatsApp Header */}
         <div className="bg-whatsapp px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-cta flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
+            <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
           </div>
           <div className="flex-1">
-            <div className="text-primary-foreground font-semibold text-sm">WishBot</div>
+            <div className="text-primary-foreground font-semibold text-sm">WishBird</div>
             <div className="text-primary-foreground/70 text-xs">online</div>
           </div>
         </div>
@@ -113,7 +114,7 @@ const WhatsAppLivePreview = ({
             </p>
 
             <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/30">
-              <span className="text-xs text-muted-foreground">via WishBot 💜</span>
+              <span className="text-xs text-muted-foreground">via WishBird 💜</span>
               <span className="text-xs text-whatsapp">
                 {scheduledTime || "00:00"} ✓✓
               </span>

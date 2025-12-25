@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { Phone, Sparkles } from "lucide-react";
+import { Phone } from "lucide-react";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
+
 const WhatsAppPreview = () => {
   return <section className="py-24 bg-gradient-to-b from-secondary/30 to-background">
     <div className="container mx-auto px-4">
@@ -44,11 +46,11 @@ const WhatsAppPreview = () => {
             <div className="bg-whatsapp-light rounded-[2.5rem] overflow-hidden">
               {/* Header */}
               <div className="bg-whatsapp px-4 py-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-cta flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                <div className="w-10 h-10 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
+                  <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-primary-foreground font-semibold text-sm">WishBot</div>
+                  <div className="text-primary-foreground font-semibold text-sm">WishBird</div>
                   <div className="text-primary-foreground/70 text-xs">online</div>
                 </div>
               </div>
@@ -82,7 +84,7 @@ const WhatsAppPreview = () => {
                     Here's a message full of love and joy, delivered at the perfect moment to make your day unforgettable. ✨
                   </div>
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/30">
-                    <span className="text-xs text-muted-foreground">via WishBot 💜</span>
+                    <span className="text-xs text-muted-foreground">via WishBird 💜</span>
                     <span className="text-xs text-whatsapp">12:00 AM ✓✓</span>
                   </div>
                 </motion.div>

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart, Sparkles, ArrowRight } from "lucide-react";
+
 const EmotionSection = () => {
   return <section className="py-24 bg-gradient-to-b from-background via-pink-soft/30 to-background overflow-hidden">
     <div className="container mx-auto px-4">
@@ -25,7 +26,7 @@ const EmotionSection = () => {
           <span className="gradient-text">Unforgettable</span>
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          WishBot creates greetings that feel personal, thoughtful, and beautifully timed — even when life gets busy. 💛
+          WishBird creates greetings that feel personal, thoughtful, and beautifully timed — even when life gets busy. 💛
         </p>
       </motion.div>
 
@@ -42,7 +43,7 @@ const EmotionSection = () => {
           once: true
         }} className="relative">
           <div className="absolute -top-4 left-4 px-3 py-1 bg-muted rounded-full text-xs font-semibold text-muted-foreground">
-            Without WishBot
+            Without WishBird
           </div>
           <div className="bg-card rounded-2xl p-6 shadow-soft border border-border/50">
             <div className="flex items-start gap-3">
@@ -76,7 +77,7 @@ const EmotionSection = () => {
         }} className="relative">
           <div className="absolute -top-4 right-4 px-3 py-1 bg-gradient-cta rounded-full text-xs font-semibold text-primary-foreground flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
-            With WishBot
+            With WishBird
           </div>
           <div className="bg-card rounded-2xl p-6 shadow-glow border border-primary/20 glow-violet">
             <div className="flex items-start gap-3">

@@ -1,8 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Bird, Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import wishbirdLogo from "@/assets/wishbird-logo.png";
 
 const Contact = () => {
   return (
@@ -29,9 +30,7 @@ const Contact = () => {
             transition={{ delay: 0.1 }}
           >
             <div className="bg-card rounded-2xl p-8 border border-border/50 h-full">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-cta flex items-center justify-center mb-6 shadow-glow">
-                <Bird className="w-8 h-8 text-primary-foreground" />
-              </div>
+              <img src={wishbirdLogo} alt="WishBird" className="w-16 h-16 object-contain mb-6" />
               <h2 className="text-2xl font-bold text-foreground mb-6">Contact Information</h2>
               
               <div className="space-y-6">
