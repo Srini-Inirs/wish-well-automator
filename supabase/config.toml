@@ -1,4 +1,4 @@
-project_id = "cpgcpximrdsgebgeprjc"
+project_id = "tdkrsgaauvsyvryyzrim"
 
 [functions.generate-wish]
 verify_jwt = false
@@ -10,4 +10,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-ai-content]
+verify_jwt = false
+
+[functions.send-whatsapp-message]
 verify_jwt = false
