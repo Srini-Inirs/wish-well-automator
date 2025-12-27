@@ -314,14 +314,14 @@ async function sendWish(
 
     if (messagesSent > 0) {
       console.log(`   📊 Summary: ${messagesSent} message(s) sent successfully`);
-      return { success: true, messagesSent, errors: errors.length > 0 ? errors : null };
+      return { success: true, messagesSent, errors: errors.length > 0 ? errors : null, primaryMessageId };
     } else {
-      return { success: false, messagesSent: 0, errors: errors.length > 0 ? errors : ['No content to send'] };
+      return { success: false, messagesSent: 0, errors: errors.length > 0 ? errors : ['No content to send'], primaryMessageId: null };
     }
 
   } catch (error: any) {
     console.error('   ❌ Unexpected error:', error.message);
-    return { success: false, messagesSent: 0, errors: [error.message] };
+    return { success: false, messagesSent: 0, errors: [error.message], primaryMessageId: null };
   }
 }
 
