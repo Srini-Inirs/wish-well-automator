@@ -57,23 +57,26 @@ serve(async (req) => {
             if (value.statuses) {
               for (const status of value.statuses) {
                 console.log(`📊 Message status update: ${status.id} -> ${status.status}`);
-                
-                // Map WhatsApp status to our status
-                let wishStatus = null;
-                if (status.status === "sent") {
-                  wishStatus = "sent";
-                } else if (status.status === "delivered") {
-                  wishStatus = "delivered";
-                } else if (status.status === "read") {
-                  wishStatus = "read";
-                } else if (status.status === "failed") {
-                  wishStatus = "failed";
+
+                const statusUpdatedAt = status.timestamp
+                  ? new Date(Number(status.timestamp) * 1000).toISOString()
+                  : new Date().toISOString();
+
+                const { error: updateError } = await supabase
+                  .from('wishes')
+                  .update({
+                    whatsapp_status: status.status,
+                    whatsapp_status_updated_at: statusUpdatedAt,
+                    whatsapp_error: status.errors ?? null,
+                  })
+                  .eq('whatsapp_message_id', status.id);
+
+                if (updateError) {
+                  console.error('   ❌ Failed to update wish status:', updateError.message);
+                } else {
+                  console.log(`   ✅ Updated wish by message_id (${status.id})`);
                 }
 
-                // Update wish status if we can find it
-                // Note: We'd need to store message IDs to track this properly
-                console.log(`   Status: ${status.status}, Timestamp: ${status.timestamp}`);
-                
                 if (status.errors) {
                   console.error(`   Errors:`, status.errors);
                 }

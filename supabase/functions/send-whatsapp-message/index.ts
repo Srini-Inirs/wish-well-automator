@@ -8,6 +8,8 @@ const corsHeaders = {
 
 const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
 const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+const WHATSAPP_FALLBACK_TEMPLATE_NAME = Deno.env.get('WHATSAPP_FALLBACK_TEMPLATE_NAME') ?? 'hello_world';
+const WHATSAPP_FALLBACK_TEMPLATE_LANG = Deno.env.get('WHATSAPP_FALLBACK_TEMPLATE_LANG') ?? 'en_US';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -60,10 +62,14 @@ function formatMessage(wish: WishData): string {
          `_Sent with love via WishBird_ ✨`;
 }
 
+function extractMessageId(result: any): string | null {
+  return result?.messages?.[0]?.id ?? null;
+}
+
 // Send text message via WhatsApp Business API
 async function sendTextMessage(phone: string, message: string): Promise<any> {
   const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -83,12 +89,50 @@ async function sendTextMessage(phone: string, message: string): Promise<any> {
   });
 
   const data = await response.json();
-  
+
   if (!response.ok) {
     console.error('WhatsApp API Error:', data);
-    throw new Error(data.error?.message || 'Failed to send message');
+    const code = data?.error?.code;
+    const subcode = data?.error?.error_subcode;
+    const msg = data?.error?.message || 'Failed to send message';
+    throw new Error(`WhatsApp API error (${code ?? 'unknown'}${subcode ? `/${subcode}` : ''}): ${msg}`);
   }
-  
+
+  return data;
+}
+
+// Send template message (useful when user has not messaged you in last 24h)
+async function sendTemplateMessage(phone: string, templateName: string): Promise<any> {
+  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: formatPhoneNumber(phone),
+      type: 'template',
+      template: {
+        name: templateName,
+        language: { code: WHATSAPP_FALLBACK_TEMPLATE_LANG },
+      },
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('WhatsApp API Template Error:', data);
+    const code = data?.error?.code;
+    const subcode = data?.error?.error_subcode;
+    const msg = data?.error?.message || 'Failed to send template message';
+    throw new Error(`WhatsApp template error (${code ?? 'unknown'}${subcode ? `/${subcode}` : ''}): ${msg}`);
+  }
+
   return data;
 }
 
@@ -188,7 +232,9 @@ async function sendAudioMessage(phone: string, audioUrl: string): Promise<any> {
 }
 
 // Send a complete wish
-async function sendWish(wish: WishData): Promise<{ success: boolean; messagesSent: number; errors: string[] | null }> {
+async function sendWish(
+  wish: WishData
+): Promise<{ success: boolean; messagesSent: number; errors: string[] | null; primaryMessageId: string | null }> {
   console.log(`📨 Sending wish to ${wish.recipient_name} (${wish.recipient_phone})`);
   console.log(`   Occasion: ${wish.occasion}`);
 
@@ -196,15 +242,34 @@ async function sendWish(wish: WishData): Promise<{ success: boolean; messagesSen
   let messagesSent = 0;
 
   try {
-    // 1. Send formatted text message
+    // 1. Send formatted text message (fallback to template if 24h window blocks free-form text)
     const formattedMessage = formatMessage(wish);
+    let primaryMessageId: string | null = null;
+
     try {
-      await sendTextMessage(wish.recipient_phone, formattedMessage);
+      const res = await sendTextMessage(wish.recipient_phone, formattedMessage);
+      primaryMessageId = extractMessageId(res);
       console.log('   ✅ Text message sent');
       messagesSent++;
     } catch (err: any) {
-      console.error('   ❌ Failed to send text:', err.message);
-      errors.push(`Text: ${err.message}`);
+      const msg = err?.message || '';
+      const looksLike24hWindow = msg.includes('131047') || msg.toLowerCase().includes('24') || msg.toLowerCase().includes('outside');
+
+      if (looksLike24hWindow) {
+        try {
+          console.log(`   ℹ️ Text blocked by 24h window; trying template: ${WHATSAPP_FALLBACK_TEMPLATE_NAME}`);
+          const tplRes = await sendTemplateMessage(wish.recipient_phone, WHATSAPP_FALLBACK_TEMPLATE_NAME);
+          primaryMessageId = extractMessageId(tplRes);
+          console.log('   ✅ Template message sent');
+          messagesSent++;
+        } catch (tplErr: any) {
+          console.error('   ❌ Failed to send template:', tplErr.message);
+          errors.push(`Template: ${tplErr.message}`);
+        }
+      } else {
+        console.error('   ❌ Failed to send text:', msg);
+        errors.push(`Text: ${msg}`);
+      }
     }
 
     // 2. Send greeting card / image
@@ -278,13 +343,35 @@ serve(async (req) => {
       console.log(`📤 Sending test message to ${phone}`);
       try {
         const result = await sendTextMessage(phone, message);
+        const messageId = extractMessageId(result);
         console.log('✅ Test message sent successfully');
-        return new Response(JSON.stringify({ success: true, result }), {
+        return new Response(JSON.stringify({ success: true, type: 'text', messageId, result }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: any) {
-        console.error('❌ Test message failed:', error.message);
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
+        const msg = error?.message || '';
+        const looksLike24hWindow = msg.includes('131047') || msg.toLowerCase().includes('24') || msg.toLowerCase().includes('outside');
+
+        if (looksLike24hWindow) {
+          console.log(`ℹ️ Test text blocked by 24h window; trying template: ${WHATSAPP_FALLBACK_TEMPLATE_NAME}`);
+          try {
+            const tplRes = await sendTemplateMessage(phone, WHATSAPP_FALLBACK_TEMPLATE_NAME);
+            const messageId = extractMessageId(tplRes);
+            console.log('✅ Test template sent successfully');
+            return new Response(JSON.stringify({ success: true, type: 'template', messageId, result: tplRes }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } catch (tplErr: any) {
+            console.error('❌ Test template failed:', tplErr.message);
+            return new Response(JSON.stringify({ success: false, error: tplErr.message }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+        }
+
+        console.error('❌ Test message failed:', msg);
+        return new Response(JSON.stringify({ success: false, error: msg }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -304,13 +391,16 @@ serve(async (req) => {
       }
 
       const result = await sendWish(wish as WishData);
-      
-      // Update wish status
+
+      // Update wish status + WhatsApp tracking
       await supabase
         .from('wishes')
         .update({
           status: result.success ? 'sent' : 'failed',
           delivered_at: result.success ? new Date().toISOString() : null,
+          whatsapp_message_id: result.primaryMessageId,
+          whatsapp_status: result.success ? 'sent' : 'failed',
+          whatsapp_status_updated_at: new Date().toISOString(),
         })
         .eq('id', wishId);
 
@@ -337,23 +427,26 @@ serve(async (req) => {
 
     const results = [];
     
-    for (const wish of dueWishes || []) {
-      const result = await sendWish(wish as WishData);
-      
-      // Update wish status in database
-      await supabase
-        .from('wishes')
-        .update({
-          status: result.success ? 'sent' : 'failed',
-          delivered_at: result.success ? new Date().toISOString() : null,
-        })
-        .eq('id', wish.id);
+      for (const wish of dueWishes || []) {
+        const result = await sendWish(wish as WishData);
 
-      results.push({
-        wishId: wish.id,
-        recipientName: wish.recipient_name,
-        ...result,
-      });
+        // Update wish status in database
+        await supabase
+          .from('wishes')
+          .update({
+            status: result.success ? 'sent' : 'failed',
+            delivered_at: result.success ? new Date().toISOString() : null,
+            whatsapp_message_id: result.primaryMessageId,
+            whatsapp_status: result.success ? 'sent' : 'failed',
+            whatsapp_status_updated_at: new Date().toISOString(),
+          })
+          .eq('id', wish.id);
+
+        results.push({
+          wishId: wish.id,
+          recipientName: wish.recipient_name,
+          ...result,
+        });
 
       // Small delay between messages to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
