@@ -118,6 +118,10 @@ export type Database = {
           user_id: string
           video_url: string | null
           voice_note_url: string | null
+          whatsapp_error: Json | null
+          whatsapp_message_id: string | null
+          whatsapp_status: string | null
+          whatsapp_status_updated_at: string | null
         }
         Insert: {
           audio_url?: string | null
@@ -138,6 +142,10 @@ export type Database = {
           user_id: string
           video_url?: string | null
           voice_note_url?: string | null
+          whatsapp_error?: Json | null
+          whatsapp_message_id?: string | null
+          whatsapp_status?: string | null
+          whatsapp_status_updated_at?: string | null
         }
         Update: {
           audio_url?: string | null
@@ -158,6 +166,10 @@ export type Database = {
           user_id?: string
           video_url?: string | null
           voice_note_url?: string | null
+          whatsapp_error?: Json | null
+          whatsapp_message_id?: string | null
+          whatsapp_status?: string | null
+          whatsapp_status_updated_at?: string | null
         }
         Relationships: []
       }
