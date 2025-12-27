@@ -271,7 +271,25 @@ serve(async (req) => {
     
     // Check if this is a scheduled run or a specific wish ID
     const body = await req.json().catch(() => ({}));
-    const wishId = body.wishId;
+    const { wishId, testMessage, phone, message } = body;
+
+    // Handle direct test message
+    if (testMessage && phone && message) {
+      console.log(`📤 Sending test message to ${phone}`);
+      try {
+        const result = await sendTextMessage(phone, message);
+        console.log('✅ Test message sent successfully');
+        return new Response(JSON.stringify({ success: true, result }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error: any) {
+        console.error('❌ Test message failed:', error.message);
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     if (wishId) {
       // Send a specific wish
