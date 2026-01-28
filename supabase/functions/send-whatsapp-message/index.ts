@@ -6,12 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// WhatsApp Cloud API Configuration
+const WHATSAPP_API_VERSION = "v24.0";
 const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
 const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
-const WHATSAPP_FALLBACK_TEMPLATE_NAME = Deno.env.get('WHATSAPP_FALLBACK_TEMPLATE_NAME') ?? 'hello_world';
-const WHATSAPP_FALLBACK_TEMPLATE_LANG = Deno.env.get('WHATSAPP_FALLBACK_TEMPLATE_LANG') ?? 'en_US';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+// Template names (hardcoded as per Meta Business Suite)
+const TEMPLATE_TEXT = 'wish_text';
+const TEMPLATE_IMAGE = 'wish_text_image';
+const TEMPLATE_VIDEO = 'wish_text_video';
+const TEMPLATE_DOCUMENT = 'wish_text_doc';
+const TEMPLATE_LANGUAGE = 'en';
 
 interface WishData {
   id: string;
@@ -33,295 +40,369 @@ function formatPhoneNumber(phone: string): string {
   return phone.replace(/[\s+\-()]/g, '');
 }
 
-// Format the wish message
-function formatMessage(wish: WishData): string {
-  const { recipient_name, sender_name, occasion, message_text } = wish;
-  
-  const occasionEmojis: Record<string, string> = {
-    Birthday: '🎂🎉',
-    Anniversary: '💍💕',
-    Festival: '🎊✨',
-    Apology: '🙏💛',
-    Appreciation: '🌟💜',
-    Congratulations: '🏆🎊',
-    'Get Well Soon': '💐🙏',
-    'Just Because': '💜✨'
-  };
+// Detect MIME type from URL
+function getMimeType(url: string): string {
+  const lower = url.toLowerCase();
+  if (lower.includes('.mp4') || lower.includes('video')) return 'video/mp4';
+  if (lower.includes('.mp3')) return 'audio/mpeg';
+  if (lower.includes('.wav')) return 'audio/wav';
+  if (lower.includes('.pdf')) return 'application/pdf';
+  if (lower.includes('.png')) return 'image/png';
+  if (lower.includes('.webp')) return 'image/webp';
+  if (lower.includes('.jpg') || lower.includes('.jpeg')) return 'image/jpeg';
+  return 'application/octet-stream';
+}
 
-  const emoji = occasionEmojis[occasion] || '✨💜';
+// Upload media to Meta's servers and get media ID
+async function uploadMediaToMeta(mediaUrl: string, mimeType: string): Promise<string> {
+  console.log(`   📤 Uploading media to Meta: ${mediaUrl.substring(0, 50)}...`);
+  console.log(`   📤 MIME type: ${mimeType}`);
   
-  if (message_text && message_text.trim()) {
-    return `${message_text}\n\nfrom: ${sender_name}`;
+  // 1. Download media from Supabase storage
+  const mediaResponse = await fetch(mediaUrl);
+  if (!mediaResponse.ok) {
+    throw new Error(`Failed to download media: ${mediaResponse.status} ${mediaResponse.statusText}`);
   }
   
-  return `${emoji} *${occasion} Wishes for ${recipient_name}!* ${emoji}\n\n` +
-         `Dear ${recipient_name},\n\n` +
-         `Wishing you a wonderful ${occasion.toLowerCase()}! ` +
-         `May this special day bring you joy, happiness, and all the love you deserve.\n\n` +
-         `from: ${sender_name}\n\n` +
-         `_Sent with love via WishBird_ ✨`;
+  const mediaBlob = await mediaResponse.blob();
+  console.log(`   📥 Downloaded media: ${mediaBlob.size} bytes`);
+  
+  // 2. Upload to Meta's servers
+  const formData = new FormData();
+  formData.append('messaging_product', 'whatsapp');
+  formData.append('type', mimeType);
+  
+  // Create a proper file with extension
+  const extension = mimeType.split('/')[1] || 'bin';
+  const fileName = `media.${extension}`;
+  formData.append('file', mediaBlob, fileName);
+  
+  const uploadUrl = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/media`;
+  
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+    },
+    body: formData,
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('   ❌ Media upload failed:', data);
+    throw new Error(`Media upload failed: ${data.error?.message || JSON.stringify(data)}`);
+  }
+  
+  console.log(`   ✅ Media uploaded, ID: ${data.id}`);
+  return data.id;
+}
+
+// Send text-only template message
+async function sendTextTemplateMessage(
+  phone: string,
+  recipientName: string,
+  senderName: string,
+  occasion: string,
+  messageText: string
+): Promise<any> {
+  const url = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  
+  const payload = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: formatPhoneNumber(phone),
+    type: 'template',
+    template: {
+      name: TEMPLATE_TEXT,
+      language: { code: TEMPLATE_LANGUAGE },
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: recipientName },
+            { type: 'text', text: senderName },
+            { type: 'text', text: occasion },
+            { type: 'text', text: messageText || 'Wishing you all the best!' },
+          ],
+        },
+      ],
+    },
+  };
+
+  console.log(`   📤 Sending text template: ${TEMPLATE_TEXT}`);
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('   ❌ WhatsApp API Error:', data);
+    throw new Error(`WhatsApp API error: ${data.error?.message || JSON.stringify(data)}`);
+  }
+  
+  return data;
+}
+
+// Send image template message
+async function sendImageTemplateMessage(
+  phone: string,
+  recipientName: string,
+  senderName: string,
+  occasion: string,
+  messageText: string,
+  mediaId: string
+): Promise<any> {
+  const url = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  
+  const payload = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: formatPhoneNumber(phone),
+    type: 'template',
+    template: {
+      name: TEMPLATE_IMAGE,
+      language: { code: TEMPLATE_LANGUAGE },
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            { type: 'image', image: { id: mediaId } },
+          ],
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: recipientName },
+            { type: 'text', text: senderName },
+            { type: 'text', text: occasion },
+            { type: 'text', text: messageText || 'Wishing you all the best!' },
+          ],
+        },
+      ],
+    },
+  };
+
+  console.log(`   📤 Sending image template: ${TEMPLATE_IMAGE}`);
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('   ❌ WhatsApp API Error:', data);
+    throw new Error(`WhatsApp API error: ${data.error?.message || JSON.stringify(data)}`);
+  }
+  
+  return data;
+}
+
+// Send video template message
+async function sendVideoTemplateMessage(
+  phone: string,
+  recipientName: string,
+  senderName: string,
+  occasion: string,
+  messageText: string,
+  mediaId: string
+): Promise<any> {
+  const url = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  
+  const payload = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: formatPhoneNumber(phone),
+    type: 'template',
+    template: {
+      name: TEMPLATE_VIDEO,
+      language: { code: TEMPLATE_LANGUAGE },
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            { type: 'video', video: { id: mediaId } },
+          ],
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: recipientName },
+            { type: 'text', text: senderName },
+            { type: 'text', text: occasion },
+            { type: 'text', text: messageText || 'Wishing you all the best!' },
+          ],
+        },
+      ],
+    },
+  };
+
+  console.log(`   📤 Sending video template: ${TEMPLATE_VIDEO}`);
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('   ❌ WhatsApp API Error:', data);
+    throw new Error(`WhatsApp API error: ${data.error?.message || JSON.stringify(data)}`);
+  }
+  
+  return data;
+}
+
+// Send document template message (for audio files)
+async function sendDocumentTemplateMessage(
+  phone: string,
+  recipientName: string,
+  senderName: string,
+  occasion: string,
+  messageText: string,
+  mediaId: string
+): Promise<any> {
+  const url = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  
+  const payload = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: formatPhoneNumber(phone),
+    type: 'template',
+    template: {
+      name: TEMPLATE_DOCUMENT,
+      language: { code: TEMPLATE_LANGUAGE },
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            { type: 'document', document: { id: mediaId } },
+          ],
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: recipientName },
+            { type: 'text', text: senderName },
+            { type: 'text', text: occasion },
+            { type: 'text', text: messageText || 'Wishing you all the best!' },
+          ],
+        },
+      ],
+    },
+  };
+
+  console.log(`   📤 Sending document template: ${TEMPLATE_DOCUMENT}`);
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('   ❌ WhatsApp API Error:', data);
+    throw new Error(`WhatsApp API error: ${data.error?.message || JSON.stringify(data)}`);
+  }
+  
+  return data;
 }
 
 function extractMessageId(result: any): string | null {
   return result?.messages?.[0]?.id ?? null;
 }
 
-// Send text message via WhatsApp Business API
-async function sendTextMessage(phone: string, message: string): Promise<any> {
-  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: formatPhoneNumber(phone),
-      type: 'text',
-      text: {
-        preview_url: false,
-        body: message
-      }
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    console.error('WhatsApp API Error:', data);
-    const code = data?.error?.code;
-    const subcode = data?.error?.error_subcode;
-    const msg = data?.error?.message || 'Failed to send message';
-    throw new Error(`WhatsApp API error (${code ?? 'unknown'}${subcode ? `/${subcode}` : ''}): ${msg}`);
-  }
-
-  return data;
-}
-
-// Send template message (useful when user has not messaged you in last 24h)
-async function sendTemplateMessage(phone: string, templateName: string): Promise<any> {
-  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: formatPhoneNumber(phone),
-      type: 'template',
-      template: {
-        name: templateName,
-        language: { code: WHATSAPP_FALLBACK_TEMPLATE_LANG },
-      },
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    console.error('WhatsApp API Template Error:', data);
-    const code = data?.error?.code;
-    const subcode = data?.error?.error_subcode;
-    const msg = data?.error?.message || 'Failed to send template message';
-    throw new Error(`WhatsApp template error (${code ?? 'unknown'}${subcode ? `/${subcode}` : ''}): ${msg}`);
-  }
-
-  return data;
-}
-
-// Send image message via WhatsApp Business API
-async function sendImageMessage(phone: string, imageUrl: string, caption: string): Promise<any> {
-  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: formatPhoneNumber(phone),
-      type: 'image',
-      image: {
-        link: imageUrl,
-        caption: caption
-      }
-    }),
-  });
-
-  const data = await response.json();
-  
-  if (!response.ok) {
-    console.error('WhatsApp API Error:', data);
-    throw new Error(data.error?.message || 'Failed to send image');
-  }
-  
-  return data;
-}
-
-// Send video message via WhatsApp Business API
-async function sendVideoMessage(phone: string, videoUrl: string, caption: string): Promise<any> {
-  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: formatPhoneNumber(phone),
-      type: 'video',
-      video: {
-        link: videoUrl,
-        caption: caption
-      }
-    }),
-  });
-
-  const data = await response.json();
-  
-  if (!response.ok) {
-    console.error('WhatsApp API Error:', data);
-    throw new Error(data.error?.message || 'Failed to send video');
-  }
-  
-  return data;
-}
-
-// Send audio message via WhatsApp Business API
-async function sendAudioMessage(phone: string, audioUrl: string): Promise<any> {
-  const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: formatPhoneNumber(phone),
-      type: 'audio',
-      audio: {
-        link: audioUrl
-      }
-    }),
-  });
-
-  const data = await response.json();
-  
-  if (!response.ok) {
-    console.error('WhatsApp API Error:', data);
-    throw new Error(data.error?.message || 'Failed to send audio');
-  }
-  
-  return data;
-}
-
-// Send a complete wish
+// Main function to send a wish using appropriate template
 async function sendWish(
   wish: WishData
 ): Promise<{ success: boolean; messagesSent: number; errors: string[] | null; primaryMessageId: string | null }> {
-  console.log(`📨 Sending wish to ${wish.recipient_name} (${wish.recipient_phone})`);
+  console.log(`\n📨 Sending wish to ${wish.recipient_name} (${wish.recipient_phone})`);
   console.log(`   Occasion: ${wish.occasion}`);
 
-  const errors: string[] = [];
-  let messagesSent = 0;
+  const { recipient_phone, recipient_name, sender_name, occasion, message_text } = wish;
+  const messageBody = message_text || 'Wishing you all the best!';
 
   try {
-    // 1. Send formatted text message (fallback to template if 24h window blocks free-form text)
-    const formattedMessage = formatMessage(wish);
-    let primaryMessageId: string | null = null;
-
-    try {
-      const res = await sendTextMessage(wish.recipient_phone, formattedMessage);
-      primaryMessageId = extractMessageId(res);
-      console.log('   ✅ Text message sent');
-      messagesSent++;
-    } catch (err: any) {
-      const msg = err?.message || '';
-      const looksLike24hWindow = msg.includes('131047') || msg.toLowerCase().includes('24') || msg.toLowerCase().includes('outside');
-
-      if (looksLike24hWindow) {
-        try {
-          console.log(`   ℹ️ Text blocked by 24h window; trying template: ${WHATSAPP_FALLBACK_TEMPLATE_NAME}`);
-          const tplRes = await sendTemplateMessage(wish.recipient_phone, WHATSAPP_FALLBACK_TEMPLATE_NAME);
-          primaryMessageId = extractMessageId(tplRes);
-          console.log('   ✅ Template message sent');
-          messagesSent++;
-        } catch (tplErr: any) {
-          console.error('   ❌ Failed to send template:', tplErr.message);
-          errors.push(`Template: ${tplErr.message}`);
-        }
-      } else {
-        console.error('   ❌ Failed to send text:', msg);
-        errors.push(`Text: ${msg}`);
-      }
-    }
-
-    // 2. Send greeting card / image
+    let result: any;
+    
+    // Determine which template to use based on media priority: video > image > audio > text
     const imageUrl = wish.greeting_card_url || wish.photo_url;
-    if (imageUrl) {
-      try {
-        const caption = `🎉 *${wish.occasion} Wishes!*\nfrom: ${wish.sender_name}`;
-        await sendImageMessage(wish.recipient_phone, imageUrl, caption);
-        console.log('   ✅ Image/greeting card sent');
-        messagesSent++;
-      } catch (err: any) {
-        console.error('   ❌ Failed to send image:', err.message);
-        errors.push(`Image: ${err.message}`);
-      }
-    }
-
-    // 3. Send video
-    if (wish.video_url) {
-      try {
-        const caption = `🎬 *Video Message*\nfrom: ${wish.sender_name}`;
-        await sendVideoMessage(wish.recipient_phone, wish.video_url, caption);
-        console.log('   ✅ Video sent');
-        messagesSent++;
-      } catch (err: any) {
-        console.error('   ❌ Failed to send video:', err.message);
-        errors.push(`Video: ${err.message}`);
-      }
-    }
-
-    // 4. Send audio/voice note
-    const audioSrc = wish.audio_url || wish.voice_note_url;
-    if (audioSrc) {
-      try {
-        await sendAudioMessage(wish.recipient_phone, audioSrc);
-        console.log('   ✅ Audio/voice note sent');
-        messagesSent++;
-      } catch (err: any) {
-        console.error('   ❌ Failed to send audio:', err.message);
-        errors.push(`Audio: ${err.message}`);
-      }
-    }
-
-    if (messagesSent > 0) {
-      console.log(`   📊 Summary: ${messagesSent} message(s) sent successfully`);
-      return { success: true, messagesSent, errors: errors.length > 0 ? errors : null, primaryMessageId };
+    const videoUrl = wish.video_url;
+    const audioUrl = wish.audio_url || wish.voice_note_url;
+    
+    if (videoUrl) {
+      // Upload video and send video template
+      console.log('   🎬 Wish has video, using video template');
+      const mimeType = getMimeType(videoUrl);
+      const mediaId = await uploadMediaToMeta(videoUrl, mimeType);
+      result = await sendVideoTemplateMessage(
+        recipient_phone, recipient_name, sender_name, occasion, messageBody, mediaId
+      );
+    } else if (imageUrl) {
+      // Upload image and send image template
+      console.log('   🖼️ Wish has image, using image template');
+      const mimeType = getMimeType(imageUrl);
+      const mediaId = await uploadMediaToMeta(imageUrl, mimeType);
+      result = await sendImageTemplateMessage(
+        recipient_phone, recipient_name, sender_name, occasion, messageBody, mediaId
+      );
+    } else if (audioUrl) {
+      // Upload audio and send document template
+      console.log('   🎵 Wish has audio, using document template');
+      const mimeType = getMimeType(audioUrl);
+      const mediaId = await uploadMediaToMeta(audioUrl, mimeType);
+      result = await sendDocumentTemplateMessage(
+        recipient_phone, recipient_name, sender_name, occasion, messageBody, mediaId
+      );
     } else {
-      return { success: false, messagesSent: 0, errors: errors.length > 0 ? errors : ['No content to send'], primaryMessageId: null };
+      // Text-only template
+      console.log('   📝 Text-only wish, using text template');
+      result = await sendTextTemplateMessage(
+        recipient_phone, recipient_name, sender_name, occasion, messageBody
+      );
     }
+    
+    const messageId = extractMessageId(result);
+    console.log(`   ✅ Message sent successfully! ID: ${messageId}`);
+    
+    return {
+      success: true,
+      messagesSent: 1,
+      errors: null,
+      primaryMessageId: messageId,
+    };
 
   } catch (error: any) {
-    console.error('   ❌ Unexpected error:', error.message);
-    return { success: false, messagesSent: 0, errors: [error.message], primaryMessageId: null };
+    console.error(`   ❌ Failed to send wish: ${error.message}`);
+    return {
+      success: false,
+      messagesSent: 0,
+      errors: [error.message],
+      primaryMessageId: null,
+    };
   }
 }
 
@@ -338,40 +419,25 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { wishId, testMessage, phone, message } = body;
 
-    // Handle direct test message
+    // Handle direct test message (text template only)
     if (testMessage && phone && message) {
       console.log(`📤 Sending test message to ${phone}`);
       try {
-        const result = await sendTextMessage(phone, message);
+        const result = await sendTextTemplateMessage(
+          phone,
+          'Friend',           // recipient_name
+          'WishBird',         // sender_name
+          'Test',             // occasion
+          message             // message_text
+        );
         const messageId = extractMessageId(result);
         console.log('✅ Test message sent successfully');
-        return new Response(JSON.stringify({ success: true, type: 'text', messageId, result }), {
+        return new Response(JSON.stringify({ success: true, type: 'template', messageId, result }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: any) {
-        const msg = error?.message || '';
-        const looksLike24hWindow = msg.includes('131047') || msg.toLowerCase().includes('24') || msg.toLowerCase().includes('outside');
-
-        if (looksLike24hWindow) {
-          console.log(`ℹ️ Test text blocked by 24h window; trying template: ${WHATSAPP_FALLBACK_TEMPLATE_NAME}`);
-          try {
-            const tplRes = await sendTemplateMessage(phone, WHATSAPP_FALLBACK_TEMPLATE_NAME);
-            const messageId = extractMessageId(tplRes);
-            console.log('✅ Test template sent successfully');
-            return new Response(JSON.stringify({ success: true, type: 'template', messageId, result: tplRes }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          } catch (tplErr: any) {
-            console.error('❌ Test template failed:', tplErr.message);
-            return new Response(JSON.stringify({ success: false, error: tplErr.message }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-        }
-
-        console.error('❌ Test message failed:', msg);
-        return new Response(JSON.stringify({ success: false, error: msg }), {
+        console.error('❌ Test message failed:', error.message);
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -401,6 +467,7 @@ serve(async (req) => {
           whatsapp_message_id: result.primaryMessageId,
           whatsapp_status: result.success ? 'sent' : 'failed',
           whatsapp_status_updated_at: new Date().toISOString(),
+          whatsapp_error: result.errors ? { errors: result.errors } : null,
         })
         .eq('id', wishId);
 
@@ -427,26 +494,27 @@ serve(async (req) => {
 
     const results = [];
     
-      for (const wish of dueWishes || []) {
-        const result = await sendWish(wish as WishData);
+    for (const wish of dueWishes || []) {
+      const result = await sendWish(wish as WishData);
 
-        // Update wish status in database
-        await supabase
-          .from('wishes')
-          .update({
-            status: result.success ? 'sent' : 'failed',
-            delivered_at: result.success ? new Date().toISOString() : null,
-            whatsapp_message_id: result.primaryMessageId,
-            whatsapp_status: result.success ? 'sent' : 'failed',
-            whatsapp_status_updated_at: new Date().toISOString(),
-          })
-          .eq('id', wish.id);
+      // Update wish status in database
+      await supabase
+        .from('wishes')
+        .update({
+          status: result.success ? 'sent' : 'failed',
+          delivered_at: result.success ? new Date().toISOString() : null,
+          whatsapp_message_id: result.primaryMessageId,
+          whatsapp_status: result.success ? 'sent' : 'failed',
+          whatsapp_status_updated_at: new Date().toISOString(),
+          whatsapp_error: result.errors ? { errors: result.errors } : null,
+        })
+        .eq('id', wish.id);
 
-        results.push({
-          wishId: wish.id,
-          recipientName: wish.recipient_name,
-          ...result,
-        });
+      results.push({
+        wishId: wish.id,
+        recipientName: wish.recipient_name,
+        ...result,
+      });
 
       // Small delay between messages to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
