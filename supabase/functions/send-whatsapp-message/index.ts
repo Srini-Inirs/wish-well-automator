@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  // Match headers sent by the web client (prevents CORS preflight failures)
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 // WhatsApp Cloud API Configuration
@@ -445,15 +446,32 @@ serve(async (req) => {
     }
 
     if (wishId) {
-      // Send a specific wish
-      const { data: wish, error } = await supabase
-        .from('wishes')
-        .select('*')
-        .eq('id', wishId)
-        .single();
+      // Idempotency: only send if we can atomically "claim" the wish.
+      // This prevents double-sends from cron + manual triggers (or concurrent runs).
+      const claimTime = new Date().toISOString();
 
-      if (error || !wish) {
-        throw new Error(`Wish not found: ${wishId}`);
+      const { data: claimed, error: claimError } = await supabase
+        .from('wishes')
+        .update({
+          status: 'sending',
+          whatsapp_status: 'sending',
+          whatsapp_status_updated_at: claimTime,
+        })
+        .eq('id', wishId)
+        .eq('status', 'scheduled')
+        .select('*');
+
+      if (claimError) {
+        throw new Error(`Failed to claim wish: ${claimError.message}`);
+      }
+
+      const wish = claimed?.[0];
+      if (!wish) {
+        // Either does not exist or already processed/claimed
+        return new Response(
+          JSON.stringify({ success: false, error: 'Wish already sent/being sent (idempotency guard).' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
       }
 
       const result = await sendWish(wish as WishData);
@@ -480,17 +498,23 @@ serve(async (req) => {
     const now = new Date().toISOString();
     console.log(`🔍 Checking for scheduled wishes at ${now}`);
 
-    const { data: dueWishes, error: fetchError } = await supabase
+    // Idempotent scheduler: claim due wishes first so parallel invocations can't double-send.
+    const { data: dueWishes, error: claimDueError } = await supabase
       .from('wishes')
-      .select('*')
+      .update({
+        status: 'sending',
+        whatsapp_status: 'sending',
+        whatsapp_status_updated_at: now,
+      })
       .eq('status', 'scheduled')
-      .lte('scheduled_date', now);
+      .lte('scheduled_date', now)
+      .select('*');
 
-    if (fetchError) {
-      throw new Error(`Failed to fetch wishes: ${fetchError.message}`);
+    if (claimDueError) {
+      throw new Error(`Failed to claim wishes: ${claimDueError.message}`);
     }
 
-    console.log(`📋 Found ${dueWishes?.length || 0} wishes to send`);
+    console.log(`📋 Claimed ${dueWishes?.length || 0} wishes to send`);
 
     const results = [];
     
