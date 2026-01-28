@@ -101,14 +101,15 @@ const CreateWish = () => {
     !!videoFile,
     !!audioFile
   );
-  const hasEnoughCredits = credits >= creditsNeeded;
-  const canSendWish = creditsNeeded === 0 || hasEnoughCredits;
+  // ⚠️ TESTING MODE: All restrictions disabled
+  const hasEnoughCredits = true; // credits >= creditsNeeded;
+  const canSendWish = true; // creditsNeeded === 0 || hasEnoughCredits;
 
-  // Feature access
-  const canUseVideo = canUseFeature(plan, "video");
-  const canUseAudio = plan === "premium";
-  const canUseAI = plan === "premium";
-  const languageRestricted = plan === "free" && formData.language !== "English";
+  // Feature access - ALL ENABLED FOR TESTING
+  const canUseVideo = true; // canUseFeature(plan, "video");
+  const canUseAudio = true; // plan === "premium";
+  const canUseAI = true; // plan === "premium";
+  const languageRestricted = false; // plan === "free" && formData.language !== "English";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -137,15 +138,12 @@ const CreateWish = () => {
   };
 
   const handlePhotoSelect = (file: File) => {
-    // Free plan: only 1 image allowed
-    if (plan === "free" && photoFile) {
-      toast({
-        title: "Image Limit",
-        description: "Free plan allows only 1 image. Upgrade to add more!",
-        variant: "destructive",
-      });
-      return;
-    }
+    // ⚠️ TESTING MODE: No image limit
+    // Free plan: only 1 image allowed - DISABLED FOR TESTING
+    // if (plan === "free" && photoFile) {
+    //   toast({...});
+    //   return;
+    // }
     setPhotoFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPhotoPreview(reader.result as string);
@@ -153,27 +151,15 @@ const CreateWish = () => {
   };
 
   const handleVideoSelect = (file: File) => {
-    if (!canUseVideo) {
-      toast({
-        title: "Feature Locked 🔒",
-        description: "Upgrade to Pro to add video messages!",
-        variant: "destructive",
-      });
-      return;
-    }
+    // ⚠️ TESTING MODE: Video enabled for all
+    // if (!canUseVideo) { ... } - DISABLED FOR TESTING
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
   };
 
   const handleAudioSelect = (file: File) => {
-    if (!canUseAudio) {
-      toast({
-        title: "Feature Locked 🔒",
-        description: "Upgrade to Premium to add audio messages!",
-        variant: "destructive",
-      });
-      return;
-    }
+    // ⚠️ TESTING MODE: Audio enabled for all
+    // if (!canUseAudio) { ... } - DISABLED FOR TESTING
     setAudioFile(file);
     setAudioPreview(URL.createObjectURL(file));
   };
@@ -471,22 +457,19 @@ const CreateWish = () => {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     Language
-                    {plan === "free" && (
-                      <span className="text-xs text-muted-foreground">(English only on Free)</span>
-                    )}
+                    {/* ⚠️ TESTING MODE: All languages enabled */}
                   </Label>
                   <Select
                     value={formData.language}
                     onValueChange={(v) => handleChange("language", v)}
-                    disabled={plan === "free"}
                   >
-                    <SelectTrigger className={plan === "free" ? "opacity-60" : ""}>
+                    <SelectTrigger>
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
                       {languages.map((lang) => (
-                        <SelectItem key={lang} value={lang} disabled={plan === "free" && lang !== "English"}>
-                          {lang} {plan === "free" && lang !== "English" && "🔒"}
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -615,7 +598,7 @@ const CreateWish = () => {
                     )}
                   </div>
 
-                  {/* Video - Pro+ only */}
+                  {/* Video - ⚠️ TESTING MODE: Enabled for all */}
                   <div className="relative">
                     <input
                       type="file"
@@ -623,25 +606,18 @@ const CreateWish = () => {
                       onChange={(e) => e.target.files?.[0] && handleVideoSelect(e.target.files[0])}
                       className="hidden"
                       id="video-upload"
-                      disabled={!canUseVideo}
                     />
                     <label
                       htmlFor="video-upload"
-                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors ${!canUseVideo
-                          ? "border-border/30 bg-muted/30 cursor-not-allowed opacity-60"
-                          : videoPreview
-                            ? "border-primary bg-primary/5 cursor-pointer"
-                            : "border-border hover:border-primary/50 cursor-pointer"
-                        }`}
+                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
+                        videoPreview
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
                     >
-                      {!canUseVideo && <Lock className="w-4 h-4 text-muted-foreground mb-1" />}
                       <span className="text-2xl mb-1">🎥</span>
                       <span className="text-xs text-muted-foreground">Video</span>
-                      {canUseVideo ? (
-                        <span className="text-xs text-primary">+{CREDIT_COSTS.video} credits</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Pro+</span>
-                      )}
+                      <span className="text-xs text-primary">+{CREDIT_COSTS.video} credits</span>
                     </label>
                     {videoPreview && (
                       <button
@@ -654,7 +630,7 @@ const CreateWish = () => {
                     )}
                   </div>
 
-                  {/* Audio - Premium only */}
+                  {/* Audio - ⚠️ TESTING MODE: Enabled for all */}
                   <div className="relative">
                     <input
                       type="file"
@@ -662,25 +638,18 @@ const CreateWish = () => {
                       onChange={(e) => e.target.files?.[0] && handleAudioSelect(e.target.files[0])}
                       className="hidden"
                       id="audio-upload"
-                      disabled={!canUseAudio}
                     />
                     <label
                       htmlFor="audio-upload"
-                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors ${!canUseAudio
-                          ? "border-border/30 bg-muted/30 cursor-not-allowed opacity-60"
-                          : audioPreview
-                            ? "border-primary bg-primary/5 cursor-pointer"
-                            : "border-border hover:border-primary/50 cursor-pointer"
-                        }`}
+                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
+                        audioPreview
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
                     >
-                      {!canUseAudio && <Lock className="w-4 h-4 text-muted-foreground mb-1" />}
                       <span className="text-2xl mb-1">🔊</span>
                       <span className="text-xs text-muted-foreground">Audio</span>
-                      {canUseAudio ? (
-                        <span className="text-xs text-primary">+{CREDIT_COSTS.audio} credits</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Premium</span>
-                      )}
+                      <span className="text-xs text-primary">+{CREDIT_COSTS.audio} credits</span>
                     </label>
                     {audioPreview && (
                       <button
