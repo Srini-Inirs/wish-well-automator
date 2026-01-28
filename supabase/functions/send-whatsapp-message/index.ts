@@ -41,16 +41,42 @@ function formatPhoneNumber(phone: string): string {
   return phone.replace(/[\s+\-()]/g, '');
 }
 
-// Detect MIME type from URL
+// Detect MIME type from URL - improved to handle URLs without extensions
 function getMimeType(url: string): string {
   const lower = url.toLowerCase();
+  
+  // Video formats
   if (lower.includes('.mp4') || lower.includes('video')) return 'video/mp4';
+  if (lower.includes('.mov')) return 'video/quicktime';
+  if (lower.includes('.avi')) return 'video/x-msvideo';
+  
+  // Audio formats  
   if (lower.includes('.mp3')) return 'audio/mpeg';
   if (lower.includes('.wav')) return 'audio/wav';
+  if (lower.includes('.ogg')) return 'audio/ogg';
+  if (lower.includes('.m4a')) return 'audio/mp4';
+  
+  // Document formats
   if (lower.includes('.pdf')) return 'application/pdf';
+  if (lower.includes('.doc')) return 'application/msword';
+  
+  // Image formats - check extensions first
   if (lower.includes('.png')) return 'image/png';
   if (lower.includes('.webp')) return 'image/webp';
+  if (lower.includes('.gif')) return 'image/gif';
   if (lower.includes('.jpg') || lower.includes('.jpeg')) return 'image/jpeg';
+  
+  // Common image hosting services - default to JPEG
+  const imageHosts = ['unsplash.com', 'imgur.com', 'pexels.com', 'pixabay.com', 'cloudinary.com', 'images.'];
+  if (imageHosts.some(host => lower.includes(host))) {
+    return 'image/jpeg';
+  }
+  
+  // If URL path contains 'image' or 'photo', assume JPEG
+  if (lower.includes('/image') || lower.includes('/photo') || lower.includes('img')) {
+    return 'image/jpeg';
+  }
+  
   return 'application/octet-stream';
 }
 
