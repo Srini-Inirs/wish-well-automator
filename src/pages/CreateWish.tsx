@@ -255,45 +255,12 @@ const CreateWish = () => {
       return;
     }
 
-    // Language restriction for free plan
-    if (languageRestricted) {
-      toast({
-        title: "Language Restricted",
-        description: "Free plan supports English only. Upgrade for multi-language!",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Video restriction
-    if (videoFile && !canUseVideo) {
-      toast({
-        title: "Feature Locked",
-        description: "Upgrade to Pro to send video messages!",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Audio restriction
-    if (audioFile && !canUseAudio) {
-      toast({
-        title: "Feature Locked",
-        description: "Upgrade to Premium to send audio messages!",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Credit check
-    if (!canSendWish) {
-      toast({
-        title: "Insufficient Credits",
-        description: `You need ${creditsNeeded} credits. You have ${credits}. Please upgrade!`,
-        variant: "destructive",
-      });
-      return;
-    }
+    // ⚠️ TESTING MODE: All restrictions disabled
+    // TODO: Re-enable after testing
+    // Language restriction for free plan - DISABLED FOR TESTING
+    // Video restriction - DISABLED FOR TESTING  
+    // Audio restriction - DISABLED FOR TESTING
+    // Credit check - DISABLED FOR TESTING
 
     setIsSubmitting(true);
 
@@ -323,16 +290,17 @@ const CreateWish = () => {
 
       if (wishError) throw wishError;
 
-      // Deduct credits (AI is free for Premium)
-      const newCredits = credits - creditsNeeded;
-      await supabase
-        .from("profiles")
-        .update({ credits: Math.max(0, newCredits) })
-        .eq("user_id", user.id);
+      // ⚠️ TESTING MODE: Credits not deducted
+      // TODO: Re-enable after testing
+      // const newCredits = credits - creditsNeeded;
+      // await supabase
+      //   .from("profiles")
+      //   .update({ credits: Math.max(0, newCredits) })
+      //   .eq("user_id", user.id);
 
       toast({
         title: "🎉 Your wish is scheduled successfully!",
-        description: `${creditsNeeded} credits used. ${newCredits} remaining.`,
+        description: "Testing mode - no credits deducted.",
       });
       navigate("/dashboard");
     } catch (error) {
