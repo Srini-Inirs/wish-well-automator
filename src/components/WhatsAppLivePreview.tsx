@@ -1,6 +1,5 @@
 import { Video, FileText, Download } from "lucide-react";
 import wishbirdLogo from "@/assets/wishbird-logo.png";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WhatsAppLivePreviewProps {
   recipientName: string;
@@ -130,20 +129,20 @@ const WhatsAppLivePreview = ({
       )}
 
       {/* Message Body */}
-      <div className="p-3 space-y-1.5">
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
+      <div className="p-3 space-y-1">
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           Hello {recipientName || "[Recipient]"} ✨💕
         </p>
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           You've received a heartfelt wish from {senderName || "[Sender]"} 💐
         </p>
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           🎊 Occasion: {occasion || "Special Day"}
         </p>
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           ❤️ Message: {messageText || "Your heartfelt message will appear here..."}
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
+        <p className="text-[13px] text-white leading-[1.4]">
           ⭐ Turning moments into memories ⭐
         </p>
         <p className="text-xs text-[#8696a0] italic">
@@ -181,11 +180,11 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Message Body */}
-      <div className="p-3 space-y-1.5">
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
+      <div className="p-3 space-y-1">
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           You've received a video from {senderName || "[Sender]"} 💗📸
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
+        <p className="text-[13px] text-white leading-[1.4]">
           ⭐ Turning moments into memories ⭐
         </p>
         <p className="text-xs text-[#8696a0] italic">
@@ -232,11 +231,11 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Message Body */}
-      <div className="p-3 space-y-1.5">
-        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
+      <div className="p-3 space-y-1">
+        <p className="text-[13px] text-white leading-[1.4] break-all">
           You received a document from {senderName || "[Sender]"} 📄📫
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
+        <p className="text-[13px] text-white leading-[1.4]">
           ⭐ Turning moments into memories ⭐
         </p>
         <p className="text-xs text-[#8696a0] italic">
@@ -257,7 +256,7 @@ const WhatsAppLivePreview = ({
   );
 
   return (
-    <div className="w-[320px] mx-auto">
+    <div className="w-full max-w-[320px] mx-auto">
       {/* Phone Frame */}
       <div className="bg-[#111b21] rounded-[2.5rem] p-2.5 shadow-2xl border-4 border-[#2a3942]">
         {/* Phone Notch */}
@@ -269,22 +268,22 @@ const WhatsAppLivePreview = ({
         <div className="bg-[#0b141a] rounded-[2rem] overflow-hidden">
           {/* WhatsApp Header */}
           <div className="bg-[#1f2c34] px-3 py-2.5 flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden flex-shrink-0">
               <img src={wishbirdLogo} alt="WishBird" className="w-7 h-7 object-contain" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-white font-medium text-sm">WishBird</div>
               <div className="text-[#8696a0] text-[11px]">online</div>
             </div>
-            <div className="flex gap-4 text-[#8696a0]">
+            <div className="flex gap-3 text-[#8696a0] flex-shrink-0">
               <span className="text-base">📹</span>
               <span className="text-base">📞</span>
               <span className="text-base">⋮</span>
             </div>
           </div>
 
-          {/* Chat Area */}
-          <ScrollArea className="h-[480px]">
+          {/* Chat Area - Fixed height, no horizontal scroll */}
+          <div className="h-[480px] overflow-y-auto overflow-x-hidden">
             <div 
               className="p-3 space-y-3"
               style={{ 
@@ -317,7 +316,7 @@ const WhatsAppLivePreview = ({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Input Bar */}
           <div className="bg-[#1f2c34] px-2.5 py-2.5 flex items-center gap-2">
