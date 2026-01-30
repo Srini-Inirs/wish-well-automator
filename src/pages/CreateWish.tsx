@@ -294,26 +294,31 @@ const CreateWish = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <Link to="/" className="flex items-center gap-2">
-              <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
-              <span className="font-bold text-lg text-foreground">WishBird</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-sm bg-muted px-3 py-1 rounded-full flex items-center gap-2">
-              <Coins className="w-4 h-4 text-gold" />
-              <span className="font-bold text-foreground">{credits}</span>
-              <span className="text-muted-foreground">credits</span>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Back + Logo */}
+            <div className="flex items-center gap-1 sm:gap-3 min-w-0">
+              <Button variant="ghost" size="sm" className="px-2 sm:px-3 flex-shrink-0" onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">Back</span>
+              </Button>
+              <Link to="/" className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <img src={wishbirdLogo} alt="WishBird" className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />
+                <span className="font-bold text-base sm:text-lg text-foreground truncate">WishBird</span>
+              </Link>
             </div>
-            <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium capitalize">
-              {plan}
-            </span>
+            
+            {/* Right: Credits + Plan */}
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+              <div className="text-xs sm:text-sm bg-muted px-2 sm:px-3 py-1 rounded-full flex items-center gap-1 sm:gap-2">
+                <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+                <span className="font-bold text-foreground">{credits}</span>
+                <span className="text-muted-foreground hidden xs:inline">credits</span>
+              </div>
+              <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium capitalize">
+                {plan}
+              </span>
+            </div>
           </div>
         </div>
       </header>
