@@ -41,7 +41,13 @@ const WhatsAppLivePreview = ({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const getDocumentTypeLabel = (type: string): string => {
+  const getDocumentExtension = (type: string, name: string): string => {
+    // Try to get extension from filename first
+    const ext = name.split('.').pop()?.toUpperCase();
+    if (ext && ['PDF', 'DOC', 'DOCX', 'PPT', 'PPTX', 'TXT'].includes(ext)) {
+      return ext;
+    }
+    // Fallback to MIME type
     const typeMap: Record<string, string> = {
       "application/pdf": "PDF",
       "application/msword": "DOC",
@@ -50,7 +56,7 @@ const WhatsAppLivePreview = ({
       "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PPTX",
       "text/plain": "TXT",
     };
-    return typeMap[type] || "Document";
+    return typeMap[type] || "DOC";
   };
 
   // Determine message flow based on selected media
@@ -86,20 +92,20 @@ const WhatsAppLivePreview = ({
 
   // Primary message with full template body
   const renderPrimaryMessage = (mediaType: 'image' | 'video' | 'document' | 'text') => (
-    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[90%] shadow-md overflow-hidden">
       {/* Media Header */}
       {mediaType === 'image' && imageSource && (
-        <img src={imageSource} alt="Attached" className="w-full h-32 object-cover" />
+        <img src={imageSource} alt="Attached" className="w-full h-40 object-cover" />
       )}
       {mediaType === 'video' && videoSource && (
         <div className="relative">
-          <video src={videoSource} className="w-full h-32 object-cover" />
+          <video src={videoSource} className="w-full h-40 object-cover" />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-              <Video className="w-5 h-5 text-[#1f2c34]" />
+            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+              <Video className="w-6 h-6 text-[#1f2c34]" />
             </div>
           </div>
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-white">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded text-[11px] text-white">
             <Video className="w-3 h-3" />
             <span>0:30</span>
           </div>
@@ -107,13 +113,16 @@ const WhatsAppLivePreview = ({
       )}
       {mediaType === 'document' && documentPreview && (
         <div className="bg-[#182229] p-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[#374248] flex items-center justify-center">
-            <FileText className="w-5 h-5 text-[#8696a0]" />
+          <div className="w-12 h-12 rounded bg-[#374248] flex items-center justify-center relative">
+            <FileText className="w-6 h-6 text-[#8696a0]" />
+            <span className="absolute -bottom-1 text-[8px] font-bold text-[#00a884] bg-[#1f2c34] px-1 rounded">
+              {getDocumentExtension(documentPreview.type, documentPreview.name)}
+            </span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-white truncate">{documentPreview.name}</p>
             <p className="text-xs text-[#8696a0]">
-              {formatFileSize(documentPreview.size)} • {getDocumentTypeLabel(documentPreview.type)}
+              {formatFileSize(documentPreview.size)} • {getDocumentExtension(documentPreview.type, documentPreview.name)}
             </p>
           </div>
           <Download className="w-5 h-5 text-[#8696a0]" />
@@ -121,27 +130,26 @@ const WhatsAppLivePreview = ({
       )}
 
       {/* Message Body */}
-      <div className="p-2.5 space-y-2">
-        <p className="text-[13px] text-white leading-relaxed">
+      <div className="p-3 space-y-1.5">
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
           Hello {recipientName || "[Recipient]"} ✨💕
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
           You've received a heartfelt wish from {senderName || "[Sender]"} 💐
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
           🎊 Occasion: {occasion || "Special Day"}
         </p>
-        <p className="text-[13px] text-white leading-relaxed">
-          ❤️ Message:{" "}
-          {messageText || "Your heartfelt message will appear here..."}
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+          ❤️ Message: {messageText || "Your heartfelt message will appear here..."}
         </p>
         <p className="text-[13px] text-white leading-relaxed">
-          ⭐ Turning moments into memories⭐
+          ⭐ Turning moments into memories ⭐
         </p>
         <p className="text-xs text-[#8696a0] italic">
           Crafted with care by -- WishBird
         </p>
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <span className="text-[10px] text-[#8696a0]">
             {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
           </span>
@@ -149,32 +157,32 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Quick Reply Button */}
-      <div className="border-t border-[#374248] py-2 text-center">
-        <span className="text-[#53bdeb] text-sm">↩ Visit website</span>
+      <div className="border-t border-[#374248] py-2.5 text-center">
+        <span className="text-[#53bdeb] text-sm font-medium">↩ Visit website</span>
       </div>
     </div>
   );
 
   // Video-only secondary message
   const renderVideoOnlyMessage = () => (
-    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[90%] shadow-md overflow-hidden">
       {/* Video Header */}
       <div className="relative">
-        <video src={videoSource!} className="w-full h-32 object-cover" />
+        <video src={videoSource!} className="w-full h-40 object-cover" />
         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-            <Video className="w-5 h-5 text-[#1f2c34]" />
+          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+            <Video className="w-6 h-6 text-[#1f2c34]" />
           </div>
         </div>
-        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-white">
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded text-[11px] text-white">
           <Video className="w-3 h-3" />
           <span>0:19</span>
         </div>
       </div>
 
       {/* Message Body */}
-      <div className="p-2.5 space-y-2">
-        <p className="text-[13px] text-white leading-relaxed">
+      <div className="p-3 space-y-1.5">
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
           You've received a video from {senderName || "[Sender]"} 💗📸
         </p>
         <p className="text-[13px] text-white leading-relaxed">
@@ -183,7 +191,7 @@ const WhatsAppLivePreview = ({
         <p className="text-xs text-[#8696a0] italic">
           Crafted with care by -- WishBird
         </p>
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <span className="text-[10px] text-[#8696a0]">
             {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
           </span>
@@ -191,19 +199,24 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Quick Reply Button */}
-      <div className="border-t border-[#374248] py-2 text-center">
-        <span className="text-[#53bdeb] text-sm">↩ Thank You</span>
+      <div className="border-t border-[#374248] py-2.5 text-center">
+        <span className="text-[#53bdeb] text-sm font-medium">↩ Thank You</span>
       </div>
     </div>
   );
 
   // Document-only secondary message
   const renderDocumentOnlyMessage = () => (
-    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[90%] shadow-md overflow-hidden">
       {/* Document Header */}
       <div className="bg-[#182229] p-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded bg-[#374248] flex items-center justify-center">
-          <FileText className="w-5 h-5 text-[#8696a0]" />
+        <div className="w-12 h-12 rounded bg-[#374248] flex items-center justify-center relative">
+          <FileText className="w-6 h-6 text-[#8696a0]" />
+          {documentPreview && (
+            <span className="absolute -bottom-1 text-[8px] font-bold text-[#00a884] bg-[#1f2c34] px-1 rounded">
+              {getDocumentExtension(documentPreview.type, documentPreview.name)}
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm text-white truncate">
@@ -211,7 +224,7 @@ const WhatsAppLivePreview = ({
           </p>
           {documentPreview && (
             <p className="text-xs text-[#8696a0]">
-              {formatFileSize(documentPreview.size)} • {getDocumentTypeLabel(documentPreview.type)}
+              {formatFileSize(documentPreview.size)} • {getDocumentExtension(documentPreview.type, documentPreview.name)}
             </p>
           )}
         </div>
@@ -219,8 +232,8 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Message Body */}
-      <div className="p-2.5 space-y-2">
-        <p className="text-[13px] text-white leading-relaxed">
+      <div className="p-3 space-y-1.5">
+        <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
           You received a document from {senderName || "[Sender]"} 📄📫
         </p>
         <p className="text-[13px] text-white leading-relaxed">
@@ -229,7 +242,7 @@ const WhatsAppLivePreview = ({
         <p className="text-xs text-[#8696a0] italic">
           Crafted with care by -- WishBird
         </p>
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <span className="text-[10px] text-[#8696a0]">
             {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
           </span>
@@ -237,51 +250,51 @@ const WhatsAppLivePreview = ({
       </div>
 
       {/* Quick Reply Button */}
-      <div className="border-t border-[#374248] py-2 text-center">
-        <span className="text-[#53bdeb] text-sm">↗ Thank You</span>
+      <div className="border-t border-[#374248] py-2.5 text-center">
+        <span className="text-[#53bdeb] text-sm font-medium">↩ Thank You</span>
       </div>
     </div>
   );
 
   return (
-    <div className="w-[280px] mx-auto">
+    <div className="w-[320px] mx-auto">
       {/* Phone Frame */}
-      <div className="bg-[#111b21] rounded-[2rem] p-2 shadow-2xl border-4 border-[#2a3942]">
+      <div className="bg-[#111b21] rounded-[2.5rem] p-2.5 shadow-2xl border-4 border-[#2a3942]">
         {/* Phone Notch */}
-        <div className="flex justify-center mb-1">
-          <div className="w-20 h-1 bg-[#2a3942] rounded-full" />
+        <div className="flex justify-center mb-1.5">
+          <div className="w-24 h-1.5 bg-[#2a3942] rounded-full" />
         </div>
 
         {/* WhatsApp UI */}
-        <div className="bg-[#0b141a] rounded-[1.5rem] overflow-hidden">
+        <div className="bg-[#0b141a] rounded-[2rem] overflow-hidden">
           {/* WhatsApp Header */}
-          <div className="bg-[#1f2c34] px-3 py-2 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
-              <img src={wishbirdLogo} alt="WishBird" className="w-6 h-6 object-contain" />
+          <div className="bg-[#1f2c34] px-3 py-2.5 flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
+              <img src={wishbirdLogo} alt="WishBird" className="w-7 h-7 object-contain" />
             </div>
             <div className="flex-1">
               <div className="text-white font-medium text-sm">WishBird</div>
-              <div className="text-[#8696a0] text-[10px]">online</div>
+              <div className="text-[#8696a0] text-[11px]">online</div>
             </div>
             <div className="flex gap-4 text-[#8696a0]">
-              <span className="text-sm">📹</span>
-              <span className="text-sm">📞</span>
-              <span className="text-sm">⋮</span>
+              <span className="text-base">📹</span>
+              <span className="text-base">📞</span>
+              <span className="text-base">⋮</span>
             </div>
           </div>
 
           {/* Chat Area */}
-          <ScrollArea className="h-[400px]">
+          <ScrollArea className="h-[480px]">
             <div 
-              className="p-3 space-y-2"
+              className="p-3 space-y-3"
               style={{ 
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                 backgroundColor: '#0b141a'
               }}
             >
               {/* Date Badge */}
-              <div className="flex justify-center mb-2">
-                <span className="text-[10px] bg-[#182229] text-[#8696a0] px-2 py-1 rounded">
+              <div className="flex justify-center mb-3">
+                <span className="text-[11px] bg-[#182229] text-[#8696a0] px-3 py-1 rounded-lg">
                   Today
                 </span>
               </div>
@@ -289,7 +302,7 @@ const WhatsAppLivePreview = ({
               {/* Multi-message indicator */}
               {messageFlow.length > 1 && (
                 <div className="flex justify-center mb-2">
-                  <span className="text-[10px] bg-[#182229] text-[#8696a0] px-2 py-1 rounded">
+                  <span className="text-[10px] bg-[#182229]/80 text-[#8696a0] px-2 py-1 rounded">
                     📨 {messageFlow.length} messages will be sent
                   </span>
                 </div>
@@ -297,7 +310,7 @@ const WhatsAppLivePreview = ({
 
               {/* Render messages */}
               {messageFlow.map((msg, index) => (
-                <div key={index} className="mb-2">
+                <div key={index} className="mb-3">
                   {msg.type === 'primary' && renderPrimaryMessage(msg.mediaType)}
                   {msg.type === 'video_only' && renderVideoOnlyMessage()}
                   {msg.type === 'doc_only' && renderDocumentOnlyMessage()}
@@ -307,13 +320,13 @@ const WhatsAppLivePreview = ({
           </ScrollArea>
 
           {/* Input Bar */}
-          <div className="bg-[#1f2c34] px-2 py-2 flex items-center gap-2">
-            <span className="text-lg">😊</span>
-            <div className="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5 text-[#8696a0] text-xs">
+          <div className="bg-[#1f2c34] px-2.5 py-2.5 flex items-center gap-2">
+            <span className="text-xl">😊</span>
+            <div className="flex-1 bg-[#2a3942] rounded-full px-4 py-2 text-[#8696a0] text-sm">
               Message
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#00a884] flex items-center justify-center">
-              <span className="text-white text-sm">🎤</span>
+            <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center">
+              <span className="text-white text-lg">🎤</span>
             </div>
           </div>
         </div>
