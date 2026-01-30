@@ -103,6 +103,7 @@ export type Database = {
           audio_url: string | null
           created_at: string
           delivered_at: string | null
+          document_url: string | null
           greeting_card_url: string | null
           id: string
           language: string
@@ -127,6 +128,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string
           delivered_at?: string | null
+          document_url?: string | null
           greeting_card_url?: string | null
           id?: string
           language?: string
@@ -151,6 +153,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string
           delivered_at?: string | null
+          document_url?: string | null
           greeting_card_url?: string | null
           id?: string
           language?: string

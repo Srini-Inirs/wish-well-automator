@@ -8,7 +8,7 @@ import {
   CheckCircle,
   CalendarHeart,
   Sparkles,
-  Mic,
+  FileText,
 } from "lucide-react";
 
 const features = [
@@ -61,9 +61,9 @@ const features = [
     gradient: "from-pink-500 to-primary",
   },
   {
-    icon: Mic,
-    title: "AI Voice Messages",
-    description: "Generate warm, natural voice greetings in multiple languages.",
+    icon: FileText,
+    title: "Document Attachments",
+    description: "Share PDF, DOC, PPT and other documents with your wishes.",
     gradient: "from-indigo-500 to-purple-600",
   },
 ];

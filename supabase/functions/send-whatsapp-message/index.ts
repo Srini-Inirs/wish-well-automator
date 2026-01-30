@@ -31,8 +31,7 @@ interface WishData {
   photo_url: string | null;
   greeting_card_url: string | null;
   video_url: string | null;
-  audio_url: string | null;
-  voice_note_url: string | null;
+  document_url: string | null;
   language: string;
 }
 
@@ -50,15 +49,13 @@ function getMimeType(url: string): string {
   if (lower.includes('.mov')) return 'video/quicktime';
   if (lower.includes('.avi')) return 'video/x-msvideo';
   
-  // Audio formats  
-  if (lower.includes('.mp3')) return 'audio/mpeg';
-  if (lower.includes('.wav')) return 'audio/wav';
-  if (lower.includes('.ogg')) return 'audio/ogg';
-  if (lower.includes('.m4a')) return 'audio/mp4';
-  
   // Document formats
   if (lower.includes('.pdf')) return 'application/pdf';
+  if (lower.includes('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   if (lower.includes('.doc')) return 'application/msword';
+  if (lower.includes('.pptx')) return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  if (lower.includes('.ppt')) return 'application/vnd.ms-powerpoint';
+  if (lower.includes('.txt')) return 'text/plain';
   
   // Image formats - check extensions first
   if (lower.includes('.png')) return 'image/png';
@@ -298,7 +295,7 @@ async function sendVideoTemplateMessage(
   return data;
 }
 
-// Send document template message (for audio files)
+// Send document template message
 async function sendDocumentTemplateMessage(
   phone: string,
   recipientName: string,
@@ -375,10 +372,10 @@ async function sendWish(
   try {
     let result: any;
     
-    // Determine which template to use based on media priority: video > image > audio > text
+    // Determine which template to use based on media priority: video > image > document > text
     const imageUrl = wish.greeting_card_url || wish.photo_url;
     const videoUrl = wish.video_url;
-    const audioUrl = wish.audio_url || wish.voice_note_url;
+    const documentUrl = wish.document_url;
     
     if (videoUrl) {
       // Upload video and send video template
@@ -396,11 +393,11 @@ async function sendWish(
       result = await sendImageTemplateMessage(
         recipient_phone, recipient_name, sender_name, occasion, messageBody, mediaId
       );
-    } else if (audioUrl) {
-      // Upload audio and send document template
-      console.log('   🎵 Wish has audio, using document template');
-      const mimeType = getMimeType(audioUrl);
-      const mediaId = await uploadMediaToMeta(audioUrl, mimeType);
+    } else if (documentUrl) {
+      // Upload document and send document template
+      console.log('   📄 Wish has document, using document template');
+      const mimeType = getMimeType(documentUrl);
+      const mediaId = await uploadMediaToMeta(documentUrl, mimeType);
       result = await sendDocumentTemplateMessage(
         recipient_phone, recipient_name, sender_name, occasion, messageBody, mediaId
       );

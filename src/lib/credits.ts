@@ -2,7 +2,7 @@
 export const CREDIT_COSTS = {
   text: 2.5,
   image: 3,
-  audio: 4,
+  document: 4,
   video: 5,
 };
 
@@ -18,7 +18,7 @@ export const PLANS = {
       image: true,
       imageLimit: 1,
       video: false,
-      audio: false,
+      document: false,
       aiText: false,
       aiImage: false,
     },
@@ -33,7 +33,7 @@ export const PLANS = {
       image: true,
       imageLimit: "unlimited",
       video: false,
-      audio: false,
+      document: false,
       aiText: false,
       aiImage: false,
     },
@@ -48,7 +48,7 @@ export const PLANS = {
       image: true,
       imageLimit: "unlimited",
       video: true,
-      audio: false,
+      document: false,
       aiText: false,
       aiImage: false,
     },
@@ -63,7 +63,7 @@ export const PLANS = {
       image: true,
       imageLimit: "unlimited",
       video: true,
-      audio: true,
+      document: true,
       aiText: true,
       aiImage: true,
     },
@@ -73,12 +73,12 @@ export const PLANS = {
 export type PlanType = keyof typeof PLANS;
 
 // Calculate total credits needed for a wish
-export function calculateWishCredits(hasText: boolean, hasImage: boolean, hasVideo: boolean, hasAudio: boolean): number {
+export function calculateWishCredits(hasText: boolean, hasImage: boolean, hasVideo: boolean, hasDocument: boolean): number {
   let total = 0;
   if (hasText) total += CREDIT_COSTS.text;
   if (hasImage) total += CREDIT_COSTS.image;
   if (hasVideo) total += CREDIT_COSTS.video;
-  if (hasAudio) total += CREDIT_COSTS.audio;
+  if (hasDocument) total += CREDIT_COSTS.document;
   return total;
 }
 
@@ -90,8 +90,8 @@ export function canUseFeature(plan: PlanType, feature: keyof typeof PLANS["free"
 }
 
 // Check if user has enough credits
-export function hasEnoughCredits(userCredits: number, hasText: boolean, hasImage: boolean, hasVideo: boolean, hasAudio: boolean): boolean {
-  const required = calculateWishCredits(hasText, hasImage, hasVideo, hasAudio);
+export function hasEnoughCredits(userCredits: number, hasText: boolean, hasImage: boolean, hasVideo: boolean, hasDocument: boolean): boolean {
+  const required = calculateWishCredits(hasText, hasImage, hasVideo, hasDocument);
   return userCredits >= required;
 }
 
@@ -99,7 +99,7 @@ export function hasEnoughCredits(userCredits: number, hasText: boolean, hasImage
 export function getFeatureRestrictionMessage(plan: PlanType, feature: string): string {
   const planNames: Record<string, string> = {
     video: "Pro",
-    audio: "Pro",
+    document: "Premium",
     aiText: "Premium",
     aiImage: "Premium",
   };
