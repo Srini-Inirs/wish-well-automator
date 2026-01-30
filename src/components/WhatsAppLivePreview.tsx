@@ -1,4 +1,4 @@
-import { Video, FileText } from "lucide-react";
+import { Video, FileText, Download } from "lucide-react";
 import wishbirdLogo from "@/assets/wishbird-logo.png";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -17,28 +17,10 @@ interface WhatsAppLivePreviewProps {
   documentPreview?: { name: string; size: number; type: string } | null;
 }
 
-interface MessageBubbleProps {
-  children: React.ReactNode;
-  time: string;
-  isFirst?: boolean;
-}
-
-const MessageBubble = ({ children, time, isFirst = false }: MessageBubbleProps) => (
-  <div className={`bg-card rounded-2xl ${isFirst ? 'rounded-tl-sm' : 'rounded-tl-2xl'} p-3 shadow-md`}>
-    {children}
-    <div className="flex justify-end mt-2">
-      <span className="text-[10px] text-whatsapp font-medium">
-        {time} ✓✓
-      </span>
-    </div>
-  </div>
-);
-
 const WhatsAppLivePreview = ({
   recipientName,
   senderName,
   occasion,
-  language = "English",
   messageText,
   scheduledTime,
   photoPreview,
@@ -47,26 +29,11 @@ const WhatsAppLivePreview = ({
   videoUrl,
   documentPreview,
 }: WhatsAppLivePreviewProps) => {
-  const getOccasionEmoji = () => {
-    switch (occasion) {
-      case "Birthday": return "🎂✨";
-      case "Anniversary": return "💍💜";
-      case "Festival": return "🎉✨";
-      case "Apology": return "💛🙏";
-      case "Appreciation": return "🌟💜";
-      case "Congratulations": return "🎊🏆";
-      case "Get Well Soon": return "💐🌸";
-      default: return "✨💜";
-    }
-  };
-
-  // Use either preview or url props
   const imageSource = photoPreview || photoUrl;
   const videoSource = videoPreview || videoUrl;
-  const hasDocument = !!documentPreview;
-
   const hasImage = !!imageSource;
   const hasVideo = !!videoSource;
+  const hasDocument = !!documentPreview;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -86,32 +53,30 @@ const WhatsAppLivePreview = ({
     return typeMap[type] || "Document";
   };
 
-  // Determine which templates will be used based on media selection
+  // Determine message flow based on selected media
   const getMessageFlow = () => {
     const messages: Array<{
-      type: 'primary' | 'secondary';
-      template: string;
+      type: 'primary' | 'video_only' | 'doc_only';
       mediaType: 'image' | 'video' | 'document' | 'text';
-      includesText: boolean;
     }> = [];
 
-    // Primary template selection (Image > Video > Document > Text)
+    // Primary template (Image > Video > Document > Text)
     if (hasImage) {
-      messages.push({ type: 'primary', template: 'wish_text_image', mediaType: 'image', includesText: true });
+      messages.push({ type: 'primary', mediaType: 'image' });
     } else if (hasVideo) {
-      messages.push({ type: 'primary', template: 'wish_text_video', mediaType: 'video', includesText: true });
+      messages.push({ type: 'primary', mediaType: 'video' });
     } else if (hasDocument) {
-      messages.push({ type: 'primary', template: 'wish_text_doc', mediaType: 'document', includesText: true });
+      messages.push({ type: 'primary', mediaType: 'document' });
     } else {
-      messages.push({ type: 'primary', template: 'wish_text', mediaType: 'text', includesText: true });
+      messages.push({ type: 'primary', mediaType: 'text' });
     }
 
     // Secondary templates for additional media
     if (hasImage && hasVideo) {
-      messages.push({ type: 'secondary', template: 'video_only_temp', mediaType: 'video', includesText: false });
+      messages.push({ type: 'video_only', mediaType: 'video' });
     }
     if ((hasImage || hasVideo) && hasDocument) {
-      messages.push({ type: 'secondary', template: 'doc_only_temp', mediaType: 'document', includesText: false });
+      messages.push({ type: 'doc_only', mediaType: 'document' });
     }
 
     return messages;
@@ -119,172 +84,239 @@ const WhatsAppLivePreview = ({
 
   const messageFlow = getMessageFlow();
 
-  // Render primary message with full text
+  // Primary message with full template body
   const renderPrimaryMessage = (mediaType: 'image' | 'video' | 'document' | 'text') => (
-    <MessageBubble time={scheduledTime || "00:00"} isFirst>
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
       {/* Media Header */}
       {mediaType === 'image' && imageSource && (
-        <div className="rounded-xl overflow-hidden mb-3 -mx-1 -mt-1">
-          <img src={imageSource} alt="Attached" className="w-full h-36 object-cover" />
-        </div>
+        <img src={imageSource} alt="Attached" className="w-full h-32 object-cover" />
       )}
       {mediaType === 'video' && videoSource && (
-        <div className="relative rounded-xl overflow-hidden mb-3 -mx-1 -mt-1">
-          <video src={videoSource} className="w-full h-36 object-cover" />
-          <div className="absolute inset-0 flex items-center justify-center bg-foreground/30">
-            <div className="w-12 h-12 rounded-full bg-card/90 flex items-center justify-center shadow-lg">
-              <Video className="w-6 h-6 text-primary" />
+        <div className="relative">
+          <video src={videoSource} className="w-full h-32 object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+              <Video className="w-5 h-5 text-[#1f2c34]" />
             </div>
+          </div>
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-white">
+            <Video className="w-3 h-3" />
+            <span>0:30</span>
           </div>
         </div>
       )}
       {mediaType === 'document' && documentPreview && (
-        <div className="rounded-xl border border-border/50 p-3 bg-muted/50 mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{documentPreview.name}</p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="px-1.5 py-0.5 bg-primary/10 rounded text-primary font-medium text-[10px]">
-                  {getDocumentTypeLabel(documentPreview.type)}
-                </span>
-                <span>{formatFileSize(documentPreview.size)}</span>
-              </div>
-            </div>
+        <div className="bg-[#182229] p-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded bg-[#374248] flex items-center justify-center">
+            <FileText className="w-5 h-5 text-[#8696a0]" />
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white truncate">{documentPreview.name}</p>
+            <p className="text-xs text-[#8696a0]">
+              {formatFileSize(documentPreview.size)} • {getDocumentTypeLabel(documentPreview.type)}
+            </p>
+          </div>
+          <Download className="w-5 h-5 text-[#8696a0]" />
         </div>
       )}
 
-      {/* Greeting Card */}
-      <div className="bg-gradient-to-br from-pink-soft via-secondary to-primary/20 rounded-xl p-4 text-center mb-3">
-        <div className="text-2xl mb-1">{getOccasionEmoji()}</div>
-        <div className="text-base font-bold text-foreground">
-          {occasion || "Special Day"} for {recipientName || "[Recipient]"}!
+      {/* Message Body */}
+      <div className="p-2.5 space-y-2">
+        <p className="text-[13px] text-white leading-relaxed">
+          Hello {recipientName || "[Recipient]"} ✨💕
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          You've received a heartfelt wish from {senderName || "[Sender]"} 💐
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          🎊 Occasion: {occasion || "Special Day"}
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          ❤️ Message:{" "}
+          {messageText || "Your heartfelt message will appear here..."}
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          ⭐ Turning moments into memories⭐
+        </p>
+        <p className="text-xs text-[#8696a0] italic">
+          Crafted with care by -- WishBird
+        </p>
+        <div className="flex justify-end">
+          <span className="text-[10px] text-[#8696a0]">
+            {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
+          </span>
         </div>
-        {language !== "English" && (
-          <div className="text-[10px] text-muted-foreground mt-1">
-            Language: {language}
-          </div>
-        )}
       </div>
 
-      {/* Message Text */}
-      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-        {messageText || "Your heartfelt message will appear here..."}
-      </p>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/30">
-        <span className="text-[10px] text-muted-foreground">via WishBird 💜</span>
+      {/* Quick Reply Button */}
+      <div className="border-t border-[#374248] py-2 text-center">
+        <span className="text-[#53bdeb] text-sm">↩ Visit website</span>
       </div>
-    </MessageBubble>
+    </div>
   );
 
-  // Render video-only secondary message
+  // Video-only secondary message
   const renderVideoOnlyMessage = () => (
-    <MessageBubble time={scheduledTime || "00:00"}>
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
       {/* Video Header */}
-      <div className="relative rounded-xl overflow-hidden mb-3 -mx-1 -mt-1">
-        <video src={videoSource!} className="w-full h-36 object-cover" />
-        <div className="absolute inset-0 flex items-center justify-center bg-foreground/30">
-          <div className="w-12 h-12 rounded-full bg-card/90 flex items-center justify-center shadow-lg">
-            <Video className="w-6 h-6 text-primary" />
+      <div className="relative">
+        <video src={videoSource!} className="w-full h-32 object-cover" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+            <Video className="w-5 h-5 text-[#1f2c34]" />
           </div>
+        </div>
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-white">
+          <Video className="w-3 h-3" />
+          <span>0:19</span>
         </div>
       </div>
 
-      {/* Template Text */}
-      <p className="text-sm text-foreground">
-        You've received a video from {senderName || "[Sender]"} 💗📸
-      </p>
-      <p className="text-sm text-foreground mt-2 text-center">
-        🌟 Turning moments into memories 🌟
-      </p>
-    </MessageBubble>
+      {/* Message Body */}
+      <div className="p-2.5 space-y-2">
+        <p className="text-[13px] text-white leading-relaxed">
+          You've received a video from {senderName || "[Sender]"} 💗📸
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          ⭐ Turning moments into memories ⭐
+        </p>
+        <p className="text-xs text-[#8696a0] italic">
+          Crafted with care by -- WishBird
+        </p>
+        <div className="flex justify-end">
+          <span className="text-[10px] text-[#8696a0]">
+            {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Quick Reply Button */}
+      <div className="border-t border-[#374248] py-2 text-center">
+        <span className="text-[#53bdeb] text-sm">↩ Thank You</span>
+      </div>
+    </div>
   );
 
-  // Render document-only secondary message
+  // Document-only secondary message
   const renderDocumentOnlyMessage = () => (
-    <MessageBubble time={scheduledTime || "00:00"}>
+    <div className="bg-[#1f2c34] rounded-lg rounded-tl-sm max-w-[85%] shadow-md overflow-hidden">
       {/* Document Header */}
-      <div className="rounded-xl border border-border/50 p-3 bg-muted/50 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {documentPreview?.name || "Document"}
+      <div className="bg-[#182229] p-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded bg-[#374248] flex items-center justify-center">
+          <FileText className="w-5 h-5 text-[#8696a0]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-white truncate">
+            {documentPreview?.name || "Document"}
+          </p>
+          {documentPreview && (
+            <p className="text-xs text-[#8696a0]">
+              {formatFileSize(documentPreview.size)} • {getDocumentTypeLabel(documentPreview.type)}
             </p>
-            {documentPreview && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="px-1.5 py-0.5 bg-primary/10 rounded text-primary font-medium text-[10px]">
-                  {getDocumentTypeLabel(documentPreview.type)}
-                </span>
-                <span>{formatFileSize(documentPreview.size)}</span>
-              </div>
-            )}
-          </div>
+          )}
+        </div>
+        <Download className="w-5 h-5 text-[#8696a0]" />
+      </div>
+
+      {/* Message Body */}
+      <div className="p-2.5 space-y-2">
+        <p className="text-[13px] text-white leading-relaxed">
+          You received a document from {senderName || "[Sender]"} 📄📫
+        </p>
+        <p className="text-[13px] text-white leading-relaxed">
+          ⭐ Turning moments into memories ⭐
+        </p>
+        <p className="text-xs text-[#8696a0] italic">
+          Crafted with care by -- WishBird
+        </p>
+        <div className="flex justify-end">
+          <span className="text-[10px] text-[#8696a0]">
+            {scheduledTime || "00:00"} <span className="text-[#53bdeb]">✓✓</span>
+          </span>
         </div>
       </div>
 
-      {/* Template Text */}
-      <p className="text-sm text-foreground">
-        You received a document from {senderName || "[Sender]"} 📄📫
-      </p>
-      <p className="text-sm text-foreground mt-2 text-center">
-        🌟 Turning moments into memories 🌟
-      </p>
-    </MessageBubble>
+      {/* Quick Reply Button */}
+      <div className="border-t border-[#374248] py-2 text-center">
+        <span className="text-[#53bdeb] text-sm">↗ Thank You</span>
+      </div>
+    </div>
   );
 
   return (
-    <div className="bg-foreground/95 rounded-[2rem] p-3 shadow-2xl">
-      <div className="bg-whatsapp-light rounded-[1.5rem] overflow-hidden">
-        {/* WhatsApp Header */}
-        <div className="bg-whatsapp px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
-            <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 object-contain" />
-          </div>
-          <div className="flex-1">
-            <div className="text-primary-foreground font-semibold text-sm">WishBird</div>
-            <div className="text-primary-foreground/70 text-xs">online</div>
-          </div>
+    <div className="w-[280px] mx-auto">
+      {/* Phone Frame */}
+      <div className="bg-[#111b21] rounded-[2rem] p-2 shadow-2xl border-4 border-[#2a3942]">
+        {/* Phone Notch */}
+        <div className="flex justify-center mb-1">
+          <div className="w-20 h-1 bg-[#2a3942] rounded-full" />
         </div>
 
-        {/* Chat Area with Scroll */}
-        <ScrollArea className="h-[480px]">
-          <div 
-            className="p-4 space-y-3"
-            style={{ 
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              backgroundColor: '#e5ddd5'
-            }}
-          >
-            {/* Template indicator badge */}
-            {messageFlow.length > 1 && (
+        {/* WhatsApp UI */}
+        <div className="bg-[#0b141a] rounded-[1.5rem] overflow-hidden">
+          {/* WhatsApp Header */}
+          <div className="bg-[#1f2c34] px-3 py-2 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-cta flex items-center justify-center overflow-hidden">
+              <img src={wishbirdLogo} alt="WishBird" className="w-6 h-6 object-contain" />
+            </div>
+            <div className="flex-1">
+              <div className="text-white font-medium text-sm">WishBird</div>
+              <div className="text-[#8696a0] text-[10px]">online</div>
+            </div>
+            <div className="flex gap-4 text-[#8696a0]">
+              <span className="text-sm">📹</span>
+              <span className="text-sm">📞</span>
+              <span className="text-sm">⋮</span>
+            </div>
+          </div>
+
+          {/* Chat Area */}
+          <ScrollArea className="h-[400px]">
+            <div 
+              className="p-3 space-y-2"
+              style={{ 
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                backgroundColor: '#0b141a'
+              }}
+            >
+              {/* Date Badge */}
               <div className="flex justify-center mb-2">
-                <span className="text-[10px] bg-card/80 text-muted-foreground px-3 py-1 rounded-full shadow-sm">
-                  📨 {messageFlow.length} messages will be sent
+                <span className="text-[10px] bg-[#182229] text-[#8696a0] px-2 py-1 rounded">
+                  Today
                 </span>
               </div>
-            )}
 
-            {/* Render messages based on flow */}
-            {messageFlow.map((msg, index) => (
-              <div key={index}>
-                {msg.type === 'primary' && renderPrimaryMessage(msg.mediaType)}
-                {msg.type === 'secondary' && msg.template === 'video_only_temp' && renderVideoOnlyMessage()}
-                {msg.type === 'secondary' && msg.template === 'doc_only_temp' && renderDocumentOnlyMessage()}
-              </div>
-            ))}
+              {/* Multi-message indicator */}
+              {messageFlow.length > 1 && (
+                <div className="flex justify-center mb-2">
+                  <span className="text-[10px] bg-[#182229] text-[#8696a0] px-2 py-1 rounded">
+                    📨 {messageFlow.length} messages will be sent
+                  </span>
+                </div>
+              )}
 
-            {/* Spacer for scroll */}
-            <div className="h-2" />
+              {/* Render messages */}
+              {messageFlow.map((msg, index) => (
+                <div key={index} className="mb-2">
+                  {msg.type === 'primary' && renderPrimaryMessage(msg.mediaType)}
+                  {msg.type === 'video_only' && renderVideoOnlyMessage()}
+                  {msg.type === 'doc_only' && renderDocumentOnlyMessage()}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+
+          {/* Input Bar */}
+          <div className="bg-[#1f2c34] px-2 py-2 flex items-center gap-2">
+            <span className="text-lg">😊</span>
+            <div className="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5 text-[#8696a0] text-xs">
+              Message
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#00a884] flex items-center justify-center">
+              <span className="text-white text-sm">🎤</span>
+            </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
