@@ -283,7 +283,7 @@ const WhatsAppLivePreview = ({
           </div>
 
           {/* Chat Area - Fixed height, no horizontal scroll */}
-          <div className="h-[480px] overflow-y-auto overflow-x-hidden">
+          <div className="h-[480px] overflow-y-auto overflow-x-hidden whatsapp-scrollbar">
             <div 
               className="p-3 space-y-3"
               style={{ 
