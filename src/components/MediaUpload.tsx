@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Video, Music, X, Lock } from "lucide-react";
+import { ImagePlus, Video, FileText, X, Lock } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -12,45 +12,57 @@ interface MediaUploadProps {
   userPlan: "free" | "premium" | "gold";
   photoPreview: string | null;
   videoPreview: string | null;
-  audioPreview: string | null;
+  documentPreview: { name: string; size: number; type: string } | null;
   onPhotoSelect: (file: File) => void;
   onVideoSelect: (file: File) => void;
-  onAudioSelect: (file: File) => void;
+  onDocumentSelect: (file: File) => void;
   onRemovePhoto: () => void;
   onRemoveVideo: () => void;
-  onRemoveAudio: () => void;
+  onRemoveDocument: () => void;
   selectedAddOns?: string[];
   disabled?: boolean;
 }
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
+// Supported document formats
+const DOCUMENT_FORMATS = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+];
+
+const DOCUMENT_EXTENSIONS = ".pdf,.doc,.docx,.ppt,.pptx,.txt";
+
 const MediaUpload = ({
   userPlan,
   photoPreview,
   videoPreview,
-  audioPreview,
+  documentPreview,
   onPhotoSelect,
   onVideoSelect,
-  onAudioSelect,
+  onDocumentSelect,
   onRemovePhoto,
   onRemoveVideo,
-  onRemoveAudio,
+  onRemoveDocument,
   selectedAddOns = [],
   disabled = false,
 }: MediaUploadProps) => {
   const photoRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
-  const audioRef = useRef<HTMLInputElement>(null);
+  const documentRef = useRef<HTMLInputElement>(null);
 
   // Access rules based on plan
   const canUploadImage = userPlan === "premium" || userPlan === "gold" || selectedAddOns.includes("image");
   const canUploadVideo = userPlan === "gold" || selectedAddOns.includes("video");
-  const canUploadAudio = userPlan === "gold" || selectedAddOns.includes("voice_note");
+  const canUploadDocument = userPlan === "gold" || selectedAddOns.includes("document");
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: "photo" | "video" | "audio",
+    type: "photo" | "video" | "document",
     onSelect: (file: File) => void
   ) => {
     const file = e.target.files?.[0];
@@ -61,10 +73,16 @@ const MediaUpload = ({
       return;
     }
 
+    // Validate document format
+    if (type === "document" && !DOCUMENT_FORMATS.includes(file.type)) {
+      alert("❌ Invalid document format. Supported formats: PDF, DOC, DOCX, PPT, PPTX, TXT");
+      return;
+    }
+
     onSelect(file);
   };
 
-  const getMediaAccessInfo = (type: "image" | "video" | "audio") => {
+  const getMediaAccessInfo = (type: "image" | "video" | "document") => {
     if (type === "image") {
       if (userPlan === "premium" || userPlan === "gold") return { included: true, label: "Included ✓" };
       if (selectedAddOns.includes("image")) return { included: false, label: "Add-on selected" };
@@ -75,12 +93,30 @@ const MediaUpload = ({
       if (selectedAddOns.includes("video")) return { included: false, label: "Add-on selected" };
       return { included: false, label: "+₹29" };
     }
-    if (type === "audio") {
+    if (type === "document") {
       if (userPlan === "gold") return { included: true, label: "Included ✓" };
-      if (selectedAddOns.includes("voice_note")) return { included: false, label: "Add-on selected" };
+      if (selectedAddOns.includes("document")) return { included: false, label: "Add-on selected" };
       return { included: false, label: "+₹19" };
     }
     return { included: false, label: "" };
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getDocumentTypeLabel = (type: string): string => {
+    const typeMap: Record<string, string> = {
+      "application/pdf": "PDF",
+      "application/msword": "DOC",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+      "application/vnd.ms-powerpoint": "PPT",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PPTX",
+      "text/plain": "TXT",
+    };
+    return typeMap[type] || "Document";
   };
 
   const MediaButton = ({
@@ -146,7 +182,7 @@ const MediaUpload = ({
 
   const imageAccess = getMediaAccessInfo("image");
   const videoAccess = getMediaAccessInfo("video");
-  const audioAccess = getMediaAccessInfo("audio");
+  const documentAccess = getMediaAccessInfo("document");
 
   return (
     <div className="space-y-4">
@@ -177,10 +213,10 @@ const MediaUpload = ({
         className="hidden"
       />
       <input
-        ref={audioRef}
+        ref={documentRef}
         type="file"
-        accept="audio/mpeg,audio/wav"
-        onChange={(e) => handleFileChange(e, "audio", onAudioSelect)}
+        accept={DOCUMENT_EXTENSIONS}
+        onChange={(e) => handleFileChange(e, "document", onDocumentSelect)}
         className="hidden"
       />
 
@@ -205,13 +241,13 @@ const MediaUpload = ({
           tooltipText={userPlan === "gold" ? "Included in Gold" : "🔒 Add Video add-on (+₹29) or upgrade to Gold"}
         />
         <MediaButton
-          icon={Music}
-          label="🔊 Audio"
-          onClick={() => audioRef.current?.click()}
-          hasPreview={!!audioPreview}
-          canAccess={canUploadAudio}
-          accessInfo={audioAccess}
-          tooltipText={userPlan === "gold" ? "Included in Gold" : "🔒 Add AI Voice add-on (+₹19) or upgrade to Gold"}
+          icon={FileText}
+          label="📄 Document"
+          onClick={() => documentRef.current?.click()}
+          hasPreview={!!documentPreview}
+          canAccess={canUploadDocument}
+          accessInfo={documentAccess}
+          tooltipText={userPlan === "gold" ? "Included in Gold" : "🔒 Add Document add-on (+₹19) or upgrade to Gold"}
         />
       </div>
 
@@ -252,25 +288,28 @@ const MediaUpload = ({
           </div>
         )}
 
-        {audioPreview && (
+        {documentPreview && (
           <div className="relative rounded-xl border border-border p-4 bg-muted/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Music className="w-5 h-5 text-primary" />
+                <FileText className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1">
-                <div className="h-2 bg-primary/20 rounded-full">
-                  <div className="h-2 bg-primary rounded-full w-1/3" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm truncate">{documentPreview.name}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="px-1.5 py-0.5 bg-primary/10 rounded text-primary font-medium">
+                    {getDocumentTypeLabel(documentPreview.type)}
+                  </span>
+                  <span>{formatFileSize(documentPreview.size)}</span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground">Audio attached</span>
             </div>
             <Button
               type="button"
               variant="destructive"
               size="icon"
               className="absolute top-2 right-2 w-8 h-8"
-              onClick={onRemoveAudio}
+              onClick={onRemoveDocument}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -279,7 +318,7 @@ const MediaUpload = ({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Max 25MB • Image: JPG, PNG, WEBP • Video: MP4 • Audio: MP3, WAV
+        Max 25MB • Image: JPG, PNG, WEBP • Video: MP4 • Document: PDF, DOC, DOCX, PPT, PPTX, TXT
       </p>
     </div>
   );

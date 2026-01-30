@@ -28,7 +28,6 @@ import {
   Send,
   Loader2,
   AlertCircle,
-  Lock,
   Coins,
 } from "lucide-react";
 import { CREDIT_COSTS, PLANS, calculateWishCredits, canUseFeature, type PlanType } from "@/lib/credits";
@@ -86,10 +85,10 @@ const CreateWish = () => {
   // Media state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [audioPreview, setAudioPreview] = useState<string | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<{ name: string; size: number; type: string } | null>(null);
 
   const plan = (userProfile?.subscription_plan || "free") as PlanType;
   const credits = userProfile?.credits || 0;
@@ -99,7 +98,7 @@ const CreateWish = () => {
     !!formData.messageText,
     !!photoFile,
     !!videoFile,
-    !!audioFile
+    !!documentFile
   );
   // ⚠️ TESTING MODE: All restrictions disabled
   const hasEnoughCredits = true; // credits >= creditsNeeded;
@@ -107,7 +106,7 @@ const CreateWish = () => {
 
   // Feature access - ALL ENABLED FOR TESTING
   const canUseVideo = true; // canUseFeature(plan, "video");
-  const canUseAudio = true; // plan === "premium";
+  const canUseDocument = true; // plan === "premium";
   const canUseAI = true; // plan === "premium";
   const languageRestricted = false; // plan === "free" && formData.language !== "English";
 
@@ -139,11 +138,6 @@ const CreateWish = () => {
 
   const handlePhotoSelect = (file: File) => {
     // ⚠️ TESTING MODE: No image limit
-    // Free plan: only 1 image allowed - DISABLED FOR TESTING
-    // if (plan === "free" && photoFile) {
-    //   toast({...});
-    //   return;
-    // }
     setPhotoFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPhotoPreview(reader.result as string);
@@ -152,16 +146,18 @@ const CreateWish = () => {
 
   const handleVideoSelect = (file: File) => {
     // ⚠️ TESTING MODE: Video enabled for all
-    // if (!canUseVideo) { ... } - DISABLED FOR TESTING
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
   };
 
-  const handleAudioSelect = (file: File) => {
-    // ⚠️ TESTING MODE: Audio enabled for all
-    // if (!canUseAudio) { ... } - DISABLED FOR TESTING
-    setAudioFile(file);
-    setAudioPreview(URL.createObjectURL(file));
+  const handleDocumentSelect = (file: File) => {
+    // ⚠️ TESTING MODE: Document enabled for all
+    setDocumentFile(file);
+    setDocumentPreview({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
   };
 
   const generateAIMessage = async () => {
@@ -242,11 +238,6 @@ const CreateWish = () => {
     }
 
     // ⚠️ TESTING MODE: All restrictions disabled
-    // TODO: Re-enable after testing
-    // Language restriction for free plan - DISABLED FOR TESTING
-    // Video restriction - DISABLED FOR TESTING  
-    // Audio restriction - DISABLED FOR TESTING
-    // Credit check - DISABLED FOR TESTING
 
     setIsSubmitting(true);
 
@@ -254,7 +245,7 @@ const CreateWish = () => {
       // Upload media files
       const photoUrl = photoFile ? await uploadFile(photoFile, "wish-photos") : null;
       const videoUrl = videoFile ? await uploadFile(videoFile, "wish-videos") : null;
-      const audioUrl = audioFile ? await uploadFile(audioFile, "wish-audio") : null;
+      const documentUrl = documentFile ? await uploadFile(documentFile, "wish-documents") : null;
 
       const scheduledDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`);
 
@@ -270,19 +261,13 @@ const CreateWish = () => {
         message_text: formData.messageText,
         photo_url: photoUrl,
         video_url: videoUrl,
-        voice_note_url: audioUrl,
+        document_url: documentUrl,
         status: "scheduled",
       });
 
       if (wishError) throw wishError;
 
       // ⚠️ TESTING MODE: Credits not deducted
-      // TODO: Re-enable after testing
-      // const newCredits = credits - creditsNeeded;
-      // await supabase
-      //   .from("profiles")
-      //   .update({ credits: Math.max(0, newCredits) })
-      //   .eq("user_id", user.id);
 
       toast({
         title: "🎉 Your wish is scheduled successfully!",
@@ -375,7 +360,7 @@ const CreateWish = () => {
               {formData.messageText && <span className="bg-muted px-2 py-1 rounded">Text: {CREDIT_COSTS.text}</span>}
               {photoFile && <span className="bg-muted px-2 py-1 rounded">Image: +{CREDIT_COSTS.image}</span>}
               {videoFile && <span className="bg-muted px-2 py-1 rounded">Video: +{CREDIT_COSTS.video}</span>}
-              {audioFile && <span className="bg-muted px-2 py-1 rounded">Audio: +{CREDIT_COSTS.audio}</span>}
+              {documentFile && <span className="bg-muted px-2 py-1 rounded">Document: +{CREDIT_COSTS.document}</span>}
             </div>
           </motion.div>
         )}
@@ -457,7 +442,6 @@ const CreateWish = () => {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     Language
-                    {/* ⚠️ TESTING MODE: All languages enabled */}
                   </Label>
                   <Select
                     value={formData.language}
@@ -479,7 +463,7 @@ const CreateWish = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="scheduledDate">Date *</Label>
+                  <Label htmlFor="scheduledDate">Schedule Date *</Label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -487,15 +471,7 @@ const CreateWish = () => {
                       type="date"
                       min={todayStr}
                       value={formData.scheduledDate}
-                      onChange={(e) => {
-                        const newDate = e.target.value;
-                        if (newDate < todayStr) return; // Prevent past dates
-                        handleChange("scheduledDate", newDate);
-                        // Reset time if date changes to today and time is in past
-                        if (newDate === todayStr && formData.scheduledTime < currentTimeStr) {
-                          handleChange("scheduledTime", "");
-                        }
-                      }}
+                      onChange={(e) => handleChange("scheduledDate", e.target.value)}
                       required
                       className="pl-10"
                     />
@@ -503,166 +479,72 @@ const CreateWish = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="scheduledTime">Time *</Label>
+                  <Label htmlFor="scheduledTime">Schedule Time *</Label>
                   <Input
                     id="scheduledTime"
                     type="time"
                     min={formData.scheduledDate === todayStr ? currentTimeStr : undefined}
                     value={formData.scheduledTime}
-                    onChange={(e) => {
-                      const newTime = e.target.value;
-                      if (formData.scheduledDate === todayStr && newTime < currentTimeStr) {
-                        return; // Prevent past time on current day
-                      }
-                      handleChange("scheduledTime", newTime);
-                    }}
+                    onChange={(e) => handleChange("scheduledTime", e.target.value)}
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="messageText">Message</Label>
+                <Label className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Your Message
+                  </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={generateAIMessage}
-                    disabled={isGenerating || !canUseAI}
-                    className={canUseAI ? "text-primary" : "text-muted-foreground"}
+                    disabled={isGenerating}
+                    className="text-primary hover:text-primary/80"
                   >
-                    {!canUseAI && <Lock className="w-3 h-3 mr-1" />}
                     {isGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        Generating...
-                      </>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                     ) : (
-                      <>
-                        <Wand2 className="w-4 h-4 mr-1" />
-                        {canUseAI ? "✨ Generate with AI (free)" : "AI (Premium)"}
-                      </>
+                      <Wand2 className="w-4 h-4 mr-1" />
                     )}
+                    AI Generate
                   </Button>
-                </div>
-                <div className="relative">
-                  <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Textarea
-                    id="messageText"
-                    placeholder="Write your heartfelt message..."
-                    value={formData.messageText}
-                    onChange={(e) => handleChange("messageText", e.target.value)}
-                    rows={6}
-                    className="pl-10"
-                  />
-                </div>
+                </Label>
+                <Textarea
+                  placeholder="Write your heartfelt message here... or let AI help you!"
+                  value={formData.messageText}
+                  onChange={(e) => handleChange("messageText", e.target.value)}
+                  rows={4}
+                  className="resize-none"
+                />
               </div>
 
-              {/* Media Upload with restrictions */}
-              <div className="space-y-4">
-                <Label>Attachments</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {/* Image - available to all */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handlePhotoSelect(e.target.files[0])}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label
-                      htmlFor="photo-upload"
-                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${photoPreview ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                        }`}
-                    >
-                      {photoPreview ? (
-                        <img src={photoPreview} alt="Preview" className="w-12 h-12 object-cover rounded-lg" />
-                      ) : (
-                        <>
-                          <span className="text-2xl mb-1">🖼️</span>
-                          <span className="text-xs text-muted-foreground">Image</span>
-                          <span className="text-xs text-primary">+{CREDIT_COSTS.image} credits</span>
-                        </>
-                      )}
-                    </label>
-                    {photoPreview && (
-                      <button
-                        type="button"
-                        onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full text-xs"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Video - ⚠️ TESTING MODE: Enabled for all */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => e.target.files?.[0] && handleVideoSelect(e.target.files[0])}
-                      className="hidden"
-                      id="video-upload"
-                    />
-                    <label
-                      htmlFor="video-upload"
-                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
-                        videoPreview
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">🎥</span>
-                      <span className="text-xs text-muted-foreground">Video</span>
-                      <span className="text-xs text-primary">+{CREDIT_COSTS.video} credits</span>
-                    </label>
-                    {videoPreview && (
-                      <button
-                        type="button"
-                        onClick={() => { setVideoFile(null); setVideoPreview(null); }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full text-xs"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Audio - ⚠️ TESTING MODE: Enabled for all */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => e.target.files?.[0] && handleAudioSelect(e.target.files[0])}
-                      className="hidden"
-                      id="audio-upload"
-                    />
-                    <label
-                      htmlFor="audio-upload"
-                      className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
-                        audioPreview
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">🔊</span>
-                      <span className="text-xs text-muted-foreground">Audio</span>
-                      <span className="text-xs text-primary">+{CREDIT_COSTS.audio} credits</span>
-                    </label>
-                    {audioPreview && (
-                      <button
-                        type="button"
-                        onClick={() => { setAudioFile(null); setAudioPreview(null); }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full text-xs"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {/* Media Upload */}
+              <MediaUpload
+                userPlan={plan === "premium" ? "gold" : plan === "pro" ? "premium" : plan === "basic" ? "premium" : "free"}
+                photoPreview={photoPreview}
+                videoPreview={videoPreview}
+                documentPreview={documentPreview}
+                onPhotoSelect={handlePhotoSelect}
+                onVideoSelect={handleVideoSelect}
+                onDocumentSelect={handleDocumentSelect}
+                onRemovePhoto={() => {
+                  setPhotoFile(null);
+                  setPhotoPreview(null);
+                }}
+                onRemoveVideo={() => {
+                  setVideoFile(null);
+                  setVideoPreview(null);
+                }}
+                onRemoveDocument={() => {
+                  setDocumentFile(null);
+                  setDocumentPreview(null);
+                }}
+                disabled={isSubmitting}
+              />
 
               <Button
                 type="submit"
@@ -679,35 +561,34 @@ const CreateWish = () => {
                 ) : (
                   <>
                     <Send className="w-5 h-5 mr-2" />
-                    Schedule Wish ({creditsNeeded} credits)
+                    Schedule Wish
                   </>
                 )}
               </Button>
             </form>
           </motion.div>
 
-          {/* Preview */}
+          {/* WhatsApp Preview */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:sticky lg:top-24 h-fit"
+            className="hidden lg:block"
           >
-            <h2 className="text-xl font-bold text-foreground mb-4">Live Preview 📱</h2>
-            <WhatsAppLivePreview
-              recipientName={formData.recipientName || "Recipient"}
-              senderName={formData.senderName || "Sender"}
-              occasion={formData.occasion || "Birthday"}
-              language={formData.language}
-              messageText={formData.messageText}
-              scheduledTime={
-                formData.scheduledDate && formData.scheduledTime
-                  ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleString()
-                  : undefined
-              }
-              photoPreview={photoPreview || undefined}
-              videoPreview={videoPreview || undefined}
-              audioPreview={audioPreview || undefined}
-            />
+            <div className="sticky top-24">
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                📱 Live Preview
+              </h3>
+              <WhatsAppLivePreview
+                recipientName={formData.recipientName || "Friend"}
+                senderName={formData.senderName || "You"}
+                occasion={formData.occasion || "Special Day"}
+                messageText={formData.messageText}
+                photoUrl={photoPreview}
+                videoUrl={videoPreview}
+                scheduledDate={formData.scheduledDate}
+                scheduledTime={formData.scheduledTime}
+              />
+            </div>
           </motion.div>
         </div>
       </main>

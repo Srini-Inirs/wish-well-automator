@@ -28,7 +28,7 @@ import {
   Crown,
   Image,
   Video,
-  Mic,
+  FileText,
   ArrowRight,
   Edit,
   Phone,
@@ -54,7 +54,7 @@ interface Wish {
   created_at: string;
   photo_url: string | null;
   video_url: string | null;
-  voice_note_url: string | null;
+  document_url: string | null;
 }
 
 interface Profile {
@@ -401,17 +401,17 @@ const Dashboard = () => {
                     <>
                       <p className="text-muted-foreground">✅ Basic: ₹49/mo - All languages, unlimited images</p>
                       <p className="text-muted-foreground">✅ Pro: ₹99/mo - + Video messages</p>
-                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Audio</p>
+                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
                     </>
                   )}
                   {plan === "basic" && (
                     <>
                       <p className="text-muted-foreground">✅ Pro: ₹99/mo - + Video messages</p>
-                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Audio</p>
+                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
                     </>
                   )}
                   {plan === "pro" && (
-                    <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Audio</p>
+                    <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
                   )}
                 </div>
               </motion.div>
@@ -574,7 +574,7 @@ const Dashboard = () => {
                       <div className="flex items-center gap-2">
                         {wish.photo_url && <Image className="w-4 h-4 text-muted-foreground" />}
                         {wish.video_url && <Video className="w-4 h-4 text-muted-foreground" />}
-                        {wish.voice_note_url && <Mic className="w-4 h-4 text-muted-foreground" />}
+                        {wish.document_url && <FileText className="w-4 h-4 text-muted-foreground" />}
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                           Scheduled
                         </span>

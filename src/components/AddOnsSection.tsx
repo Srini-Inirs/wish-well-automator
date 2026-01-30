@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Image,
   Video,
-  Mic,
+  FileText,
   Sparkles,
   Zap,
   Lock
@@ -39,11 +39,11 @@ const addOns: AddOn[] = [
     availableFor: ["premium", "gold"],
   },
   {
-    id: "voice_note",
-    name: "AI Voice Note",
+    id: "document",
+    name: "Document Attachment",
     price: 19,
-    icon: Mic,
-    description: "Convert wish to AI voice in selected language",
+    icon: FileText,
+    description: "Attach PDF, DOC, DOCX, PPT, PPTX, or TXT (≤25MB)",
     includedIn: ["gold"],
     availableFor: ["premium", "gold"],
   },
@@ -156,7 +156,7 @@ const AddOnsSection = ({
                   <p className="font-medium text-foreground text-sm">
                     {addOn.name} {addOn.id === "image" && "🖼"}
                     {addOn.id === "video" && "🎥"}
-                    {addOn.id === "voice_note" && "🎤"}
+                    {addOn.id === "document" && "📄"}
                     {addOn.id === "premium_card" && "✨"}
                     {addOn.id === "urgent" && "⚡"}
                     {!included && available && ` (+₹${addOn.price})`}
