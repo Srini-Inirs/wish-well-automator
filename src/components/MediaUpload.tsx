@@ -273,71 +273,68 @@ const MediaUpload = ({
         />
       </div>
 
-      {/* Previews */}
-      <div className="space-y-3">
-        {photoPreview && (
-          <div className="relative rounded-xl overflow-hidden border border-border">
-            <img src={photoPreview} alt="Preview" className="w-full h-40 object-cover" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 w-8 h-8"
-              onClick={onRemovePhoto}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-
-        {videoPreview && (
-          <div className="relative rounded-xl overflow-hidden border border-border">
-            <video src={videoPreview} className="w-full h-40 object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
-              <div className="w-12 h-12 rounded-full bg-card/90 flex items-center justify-center">
-                <Video className="w-6 h-6 text-primary" />
-              </div>
+      {/* Compact Previews Grid */}
+      {(photoPreview || videoPreview || documentPreview) && (
+        <div className="grid grid-cols-3 gap-2">
+          {photoPreview && (
+            <div className="relative rounded-lg overflow-hidden border border-border aspect-square">
+              <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-1 right-1 w-5 h-5"
+                onClick={onRemovePhoto}
+              >
+                <X className="w-3 h-3" />
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 w-8 h-8"
-              onClick={onRemoveVideo}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
+          )}
 
-        {documentPreview && (
-          <div className="relative rounded-xl border border-border p-4 bg-muted/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground text-sm truncate">{documentPreview.name}</p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="px-1.5 py-0.5 bg-primary/10 rounded text-primary font-medium">
-                    {getDocumentTypeLabel(documentPreview.type)}
-                  </span>
-                  <span>{formatFileSize(documentPreview.size)}</span>
+          {videoPreview && (
+            <div className="relative rounded-lg overflow-hidden border border-border aspect-square">
+              <video src={videoPreview} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
+                <div className="w-8 h-8 rounded-full bg-card/90 flex items-center justify-center">
+                  <Video className="w-4 h-4 text-primary" />
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-1 right-1 w-5 h-5"
+                onClick={onRemoveVideo}
+              >
+                <X className="w-3 h-3" />
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 w-8 h-8"
-              onClick={onRemoveDocument}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+          )}
+
+          {documentPreview && (
+            <div className="relative rounded-lg border border-border p-2 bg-muted/50 aspect-square flex flex-col items-center justify-center">
+              <FileText className="w-6 h-6 text-primary mb-1" />
+              <p className="text-[10px] font-medium text-foreground text-center truncate w-full px-1">
+                {documentPreview.name.length > 12 
+                  ? documentPreview.name.slice(0, 10) + "..." 
+                  : documentPreview.name}
+              </p>
+              <span className="text-[9px] text-muted-foreground">
+                {getDocumentTypeLabel(documentPreview.type)} • {formatFileSize(documentPreview.size)}
+              </span>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-1 right-1 w-5 h-5"
+                onClick={onRemoveDocument}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Max 25MB • Image: JPG, PNG, WEBP • Video: MP4 • Document: PDF, DOC, DOCX, PPT, PPTX, TXT
