@@ -574,10 +574,10 @@ const CreateWish = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="hidden lg:block"
+            className="block"
           >
-            <div className="sticky top-24">
-              <h3 className="text-lg font-bold text-foreground mb-4">
+            <div className="lg:sticky lg:top-24">
+              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 📱 Live Preview
               </h3>
               <WhatsAppLivePreview
@@ -587,6 +587,7 @@ const CreateWish = () => {
                 messageText={formData.messageText}
                 photoUrl={photoPreview}
                 videoUrl={videoPreview}
+                documentPreview={documentPreview}
                 scheduledDate={formData.scheduledDate}
                 scheduledTime={formData.scheduledTime}
               />
