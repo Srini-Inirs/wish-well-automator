@@ -46,6 +46,17 @@ function formatPhoneNumber(phone: string): string {
   return phone.replace(/[\s+\-()]/g, '');
 }
 
+// Sanitize text for WhatsApp template parameters
+// WhatsApp rejects: newlines, tabs, and 4+ consecutive spaces
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/[\r\n\t]/g, ' ')          // Replace newlines/tabs with single space
+    .replace(/\s{4,}/g, '   ')          // Replace 4+ spaces with 3 spaces
+    .replace(/\s+/g, ' ')               // Normalize multiple spaces to single
+    .trim();                            // Trim leading/trailing
+}
+
 // Detect MIME type from URL - improved to handle URLs without extensions
 function getMimeType(url: string): string {
   const lower = url.toLowerCase();
@@ -485,8 +496,13 @@ async function sendWish(
   console.log(`\n📨 Sending wish to ${wish.recipient_name} (${wish.recipient_phone})`);
   console.log(`   Occasion: ${wish.occasion}`);
 
-  const { recipient_phone, recipient_name, sender_name, occasion, message_text } = wish;
-  const messageBody = message_text || 'Wishing you all the best!';
+  const { recipient_phone } = wish;
+  
+  // Sanitize all text parameters to prevent WhatsApp API errors
+  const recipient_name = sanitizeText(wish.recipient_name);
+  const sender_name = sanitizeText(wish.sender_name);
+  const occasion = sanitizeText(wish.occasion);
+  const messageBody = sanitizeText(wish.message_text || '') || 'Wishing you all the best!';
 
   const imageUrl = wish.greeting_card_url || wish.photo_url;
   const videoUrl = wish.video_url;
