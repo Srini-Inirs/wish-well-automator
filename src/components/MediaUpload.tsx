@@ -10,6 +10,8 @@ import {
 
 interface MediaUploadProps {
   userPlan: "free" | "premium" | "gold";
+  /** When true, disables plan/add-on gating and hides upgrade prompts (for end-to-end testing). */
+  testingMode?: boolean;
   photoPreview: string | null;
   videoPreview: string | null;
   documentPreview: { name: string; size: number; type: string } | null;
@@ -39,6 +41,7 @@ const DOCUMENT_EXTENSIONS = ".pdf,.doc,.docx,.ppt,.pptx,.txt";
 
 const MediaUpload = ({
   userPlan,
+  testingMode = false,
   photoPreview,
   videoPreview,
   documentPreview,
@@ -56,9 +59,9 @@ const MediaUpload = ({
   const documentRef = useRef<HTMLInputElement>(null);
 
   // Access rules based on plan
-  const canUploadImage = userPlan === "premium" || userPlan === "gold" || selectedAddOns.includes("image");
-  const canUploadVideo = userPlan === "gold" || selectedAddOns.includes("video");
-  const canUploadDocument = userPlan === "gold" || selectedAddOns.includes("document");
+  const canUploadImage = testingMode || userPlan === "premium" || userPlan === "gold" || selectedAddOns.includes("image");
+  const canUploadVideo = testingMode || userPlan === "gold" || selectedAddOns.includes("video");
+  const canUploadDocument = testingMode || userPlan === "gold" || selectedAddOns.includes("document");
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -83,6 +86,7 @@ const MediaUpload = ({
   };
 
   const getMediaAccessInfo = (type: "image" | "video" | "document") => {
+    if (testingMode) return { included: true, label: "Included ✓" };
     if (type === "image") {
       if (userPlan === "premium" || userPlan === "gold") return { included: true, label: "Included ✓" };
       if (selectedAddOns.includes("image")) return { included: false, label: "Add-on selected" };
@@ -190,7 +194,7 @@ const MediaUpload = ({
         <h3 className="text-lg font-bold text-foreground">
           Add Media (Optional)
         </h3>
-        {userPlan === "free" && (
+        {!testingMode && userPlan === "free" && (
           <span className="text-xs text-gold bg-gold/10 px-2 py-1 rounded-full">
             💛 Select add-ons below
           </span>
@@ -229,7 +233,13 @@ const MediaUpload = ({
           hasPreview={!!photoPreview}
           canAccess={canUploadImage}
           accessInfo={imageAccess}
-          tooltipText={userPlan === "free" ? "🔒 Add Image add-on (+₹10) or upgrade to Premium" : "Available with Premium"}
+          tooltipText={
+            testingMode
+              ? "Enabled for testing"
+              : userPlan === "free"
+                ? "🔒 Add Image add-on (+₹10) or upgrade to Premium"
+                : "Available with Premium"
+          }
         />
         <MediaButton
           icon={Video}
@@ -238,7 +248,13 @@ const MediaUpload = ({
           hasPreview={!!videoPreview}
           canAccess={canUploadVideo}
           accessInfo={videoAccess}
-          tooltipText={userPlan === "gold" ? "Included in Gold" : "🔒 Add Video add-on (+₹29) or upgrade to Gold"}
+          tooltipText={
+            testingMode
+              ? "Enabled for testing"
+              : userPlan === "gold"
+                ? "Included in Gold"
+                : "🔒 Add Video add-on (+₹29) or upgrade to Gold"
+          }
         />
         <MediaButton
           icon={FileText}
@@ -247,7 +263,13 @@ const MediaUpload = ({
           hasPreview={!!documentPreview}
           canAccess={canUploadDocument}
           accessInfo={documentAccess}
-          tooltipText={userPlan === "gold" ? "Included in Gold" : "🔒 Add Document add-on (+₹19) or upgrade to Gold"}
+          tooltipText={
+            testingMode
+              ? "Enabled for testing"
+              : userPlan === "gold"
+                ? "Included in Gold"
+                : "🔒 Add Document add-on (+₹19) or upgrade to Gold"
+          }
         />
       </div>
 
