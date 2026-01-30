@@ -574,9 +574,9 @@ const CreateWish = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="block"
+            className="w-full flex flex-col items-center"
           >
-            <div className="lg:sticky lg:top-24">
+            <div className="lg:sticky lg:top-24 w-full flex flex-col items-center">
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 📱 Live Preview
               </h3>

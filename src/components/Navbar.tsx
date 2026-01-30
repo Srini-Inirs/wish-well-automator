@@ -29,9 +29,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src={wishbirdLogo} alt="WishBird" className="w-10 h-10 object-contain" />
-            <span className="font-bold text-xl text-foreground">WishBird</span>
+          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+            <img src={wishbirdLogo} alt="WishBird" className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
+            <span className="font-bold text-lg sm:text-xl text-foreground whitespace-nowrap">WishBird</span>
           </Link>
 
           {/* Desktop Navigation */}
