@@ -524,7 +524,9 @@ const CreateWish = () => {
 
               {/* Media Upload */}
               <MediaUpload
-                userPlan={plan === "premium" ? "gold" : plan === "pro" ? "premium" : plan === "basic" ? "premium" : "free"}
+                // TESTING MODE: unlock all media without add-ons/payment prompts
+                userPlan="gold"
+                testingMode
                 photoPreview={photoPreview}
                 videoPreview={videoPreview}
                 documentPreview={documentPreview}
