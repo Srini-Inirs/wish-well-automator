@@ -54,7 +54,7 @@ const plans: Plan[] = [
       { text: "80 credits per month", included: true },
       { text: "Everything in Pro", included: true },
       { text: "AI generation (free)", included: true },
-      { text: "Audio/Voice messages", included: true },
+      { text: "Document messages", included: true },
     ],
     planKey: "premium",
   },
