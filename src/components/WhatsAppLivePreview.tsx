@@ -130,16 +130,16 @@ const WhatsAppLivePreview = ({
 
       {/* Message Body */}
       <div className="p-3 space-y-1">
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           Hello {recipientName || "[Recipient]"} ✨💕
         </p>
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           You've received a heartfelt wish from {senderName || "[Sender]"} 💐
         </p>
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           🎊 Occasion: {occasion || "Special Day"}
         </p>
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           ❤️ Message: {messageText || "Your heartfelt message will appear here..."}
         </p>
         <p className="text-[13px] text-white leading-[1.4]">
@@ -181,7 +181,7 @@ const WhatsAppLivePreview = ({
 
       {/* Message Body */}
       <div className="p-3 space-y-1">
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           You've received a video from {senderName || "[Sender]"} 💗📸
         </p>
         <p className="text-[13px] text-white leading-[1.4]">
@@ -232,7 +232,7 @@ const WhatsAppLivePreview = ({
 
       {/* Message Body */}
       <div className="p-3 space-y-1">
-        <p className="text-[13px] text-white leading-[1.4] break-all">
+        <p className="text-[13px] text-white leading-[1.45] text-left whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
           You received a document from {senderName || "[Sender]"} 📄📫
         </p>
         <p className="text-[13px] text-white leading-[1.4]">
@@ -256,9 +256,9 @@ const WhatsAppLivePreview = ({
   );
 
   return (
-    <div className="w-full max-w-[320px] mx-auto">
+    <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto">
       {/* Phone Frame */}
-      <div className="bg-[#111b21] rounded-[2.5rem] p-2.5 shadow-2xl border-4 border-[#2a3942]">
+      <div className="bg-[#111b21] w-full box-border rounded-[2.5rem] p-2.5 shadow-2xl border-4 border-[#2a3942] overflow-hidden">
         {/* Phone Notch */}
         <div className="flex justify-center mb-1.5">
           <div className="w-24 h-1.5 bg-[#2a3942] rounded-full" />
@@ -309,7 +309,7 @@ const WhatsAppLivePreview = ({
 
               {/* Render messages */}
               {messageFlow.map((msg, index) => (
-                <div key={index} className="mb-3">
+                <div key={index} className="mb-3 overflow-x-hidden">
                   {msg.type === 'primary' && renderPrimaryMessage(msg.mediaType)}
                   {msg.type === 'video_only' && renderVideoOnlyMessage()}
                   {msg.type === 'doc_only' && renderDocumentOnlyMessage()}
