@@ -75,7 +75,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingWishes, setLoadingWishes] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editForm, setEditForm] = useState({ displayName: "", phoneNumber: "" });
+  const [editForm, setEditForm] = useState({ displayName: "" });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
@@ -105,7 +105,6 @@ const Dashboard = () => {
       setProfile(profileResult.data);
       setEditForm({
         displayName: profileResult.data.display_name || "",
-        phoneNumber: profileResult.data.phone_number || "",
       });
     }
     if (wishesResult.data) setWishes(wishesResult.data);
@@ -139,7 +138,6 @@ const Dashboard = () => {
         .from("profiles")
         .update({
           display_name: editForm.displayName,
-          phone_number: editForm.phoneNumber,
         })
         .eq("user_id", user.id);
 
@@ -148,7 +146,6 @@ const Dashboard = () => {
       setProfile((prev) => prev ? {
         ...prev,
         display_name: editForm.displayName,
-        phone_number: editForm.phoneNumber,
       } : null);
 
       setIsEditingProfile(false);
@@ -352,68 +349,86 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
-            {/* Quick Actions - Only New Wish */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft"
-            >
-              <h3 className="font-bold text-lg text-foreground mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Button
-                  variant="hero"
-                  className="w-full h-auto py-4 flex items-center justify-center gap-3"
-                  onClick={() => navigate("/create-wish")}
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>New Wish</span>
-                </Button>
-                {plan !== "premium" && (
-                  <Button
-                    variant="outline"
-                    className="w-full h-auto py-4 flex items-center justify-center gap-3 border-gold text-gold hover:bg-gold/10"
-                    onClick={openUpgradeDialog}
-                    disabled={!!loadingPlan}
-                  >
-                    {loadingPlan ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Crown className="w-5 h-5" />
-                    )}
-                    <span>Upgrade Plan</span>
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-
             {/* Pricing Quick View */}
             {plan !== "premium" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
                 className="bg-gradient-to-br from-purple-600/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20"
               >
-                <h3 className="font-bold text-lg text-foreground mb-3">💎 Upgrade Benefits</h3>
-                <div className="space-y-2 text-sm">
+                <h3 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
+                  <span>💎</span> Upgrade Benefits
+                </h3>
+                <div className="space-y-3">
                   {plan === "free" && (
                     <>
-                      <p className="text-muted-foreground">✅ Basic: ₹49/mo - All languages, unlimited images</p>
-                      <p className="text-muted-foreground">✅ Pro: ₹99/mo - + Video messages</p>
-                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <span className="font-medium text-foreground">Basic</span>
+                          <span className="text-muted-foreground"> — ₹49/mo</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">All languages, unlimited images</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <span className="font-medium text-foreground">Pro</span>
+                          <span className="text-muted-foreground"> — ₹99/mo</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">+ Video messages</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <span className="font-medium text-foreground">Premium</span>
+                          <span className="text-muted-foreground"> — ₹199/mo</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">+ AI generation, Documents</p>
+                        </div>
+                      </div>
                     </>
                   )}
                   {plan === "basic" && (
                     <>
-                      <p className="text-muted-foreground">✅ Pro: ₹99/mo - + Video messages</p>
-                      <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <span className="font-medium text-foreground">Pro</span>
+                          <span className="text-muted-foreground"> — ₹99/mo</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">+ Video messages</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <span className="font-medium text-foreground">Premium</span>
+                          <span className="text-muted-foreground"> — ₹199/mo</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">+ AI generation, Documents</p>
+                        </div>
+                      </div>
                     </>
                   )}
                   {plan === "pro" && (
-                    <p className="text-muted-foreground">✅ Premium: ₹199/mo - + AI generation, Document</p>
+                    <div className="flex items-start gap-3">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <div>
+                        <span className="font-medium text-foreground">Premium</span>
+                        <span className="text-muted-foreground"> — ₹199/mo</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">+ AI generation, Documents</p>
+                      </div>
+                    </div>
                   )}
                 </div>
+                <Button
+                  variant="hero"
+                  className="w-full mt-4"
+                  onClick={openUpgradeDialog}
+                  disabled={!!loadingPlan}
+                >
+                  {loadingPlan ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
+                  Upgrade Now
+                </Button>
               </motion.div>
             )}
           </div>
@@ -656,14 +671,15 @@ const Dashboard = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={editForm.phoneNumber}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                id="email"
+                type="email"
+                value={user?.email || ""}
+                disabled
+                className="bg-muted cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
             </div>
           </div>
           <DialogFooter>
