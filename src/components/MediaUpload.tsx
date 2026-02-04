@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface MediaUploadProps {
-  userPlan: "free" | "premium" | "gold";
+  userPlan: "free" | "basic" | "pro" | "premium";
   /** When true, disables plan/add-on gating and hides upgrade prompts (for end-to-end testing). */
   testingMode?: boolean;
   photoPreview: string | null;
@@ -59,9 +59,9 @@ const MediaUpload = ({
   const documentRef = useRef<HTMLInputElement>(null);
 
   // Access rules based on plan
-  const canUploadImage = testingMode || userPlan === "premium" || userPlan === "gold" || selectedAddOns.includes("image");
-  const canUploadVideo = testingMode || userPlan === "gold" || selectedAddOns.includes("video");
-  const canUploadDocument = testingMode || userPlan === "gold" || selectedAddOns.includes("document");
+  const canUploadImage = testingMode || userPlan !== "free"; // Basic+ can upload images
+  const canUploadVideo = testingMode || userPlan === "pro" || userPlan === "premium"; // Pro+ can upload videos
+  const canUploadDocument = testingMode || userPlan === "premium"; // Premium only
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -88,19 +88,16 @@ const MediaUpload = ({
   const getMediaAccessInfo = (type: "image" | "video" | "document") => {
     if (testingMode) return { included: true, label: "Included ✓" };
     if (type === "image") {
-      if (userPlan === "premium" || userPlan === "gold") return { included: true, label: "Included ✓" };
-      if (selectedAddOns.includes("image")) return { included: false, label: "Add-on selected" };
-      return { included: false, label: "+₹10" };
+      if (userPlan !== "free") return { included: true, label: "Included ✓" };
+      return { included: false, label: "Upgrade" };
     }
     if (type === "video") {
-      if (userPlan === "gold") return { included: true, label: "Included ✓" };
-      if (selectedAddOns.includes("video")) return { included: false, label: "Add-on selected" };
-      return { included: false, label: "+₹29" };
+      if (userPlan === "pro" || userPlan === "premium") return { included: true, label: "Included ✓" };
+      return { included: false, label: "Pro+" };
     }
     if (type === "document") {
-      if (userPlan === "gold") return { included: true, label: "Included ✓" };
-      if (selectedAddOns.includes("document")) return { included: false, label: "Add-on selected" };
-      return { included: false, label: "+₹19" };
+      if (userPlan === "premium") return { included: true, label: "Included ✓" };
+      return { included: false, label: "Premium" };
     }
     return { included: false, label: "" };
   };
@@ -237,8 +234,8 @@ const MediaUpload = ({
             testingMode
               ? "Enabled for testing"
               : userPlan === "free"
-                ? "🔒 Add Image add-on (+₹10) or upgrade to Premium"
-                : "Available with Premium"
+                ? "🔒 Upgrade to Basic+ for images"
+                : "Images included in your plan"
           }
         />
         <MediaButton
@@ -251,9 +248,9 @@ const MediaUpload = ({
           tooltipText={
             testingMode
               ? "Enabled for testing"
-              : userPlan === "gold"
-                ? "Included in Gold"
-                : "🔒 Add Video add-on (+₹29) or upgrade to Gold"
+              : userPlan === "pro" || userPlan === "premium"
+                ? "Videos included in your plan"
+                : "🔒 Upgrade to Pro+ for video messages"
           }
         />
         <MediaButton
@@ -266,9 +263,9 @@ const MediaUpload = ({
           tooltipText={
             testingMode
               ? "Enabled for testing"
-              : userPlan === "gold"
-                ? "Included in Gold"
-                : "🔒 Add Document add-on (+₹19) or upgrade to Gold"
+              : userPlan === "premium"
+                ? "Documents included in your plan"
+                : "🔒 Upgrade to Premium for document messages"
           }
         />
       </div>

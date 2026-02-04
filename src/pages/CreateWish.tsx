@@ -100,15 +100,16 @@ const CreateWish = () => {
     !!videoFile,
     !!documentFile
   );
-  // ⚠️ TESTING MODE: All restrictions disabled
-  const hasEnoughCredits = true; // credits >= creditsNeeded;
-  const canSendWish = true; // creditsNeeded === 0 || hasEnoughCredits;
+  // PRODUCTION MODE: Full restrictions enabled
+  const hasEnoughCredits = credits >= creditsNeeded;
+  const canSendWish = creditsNeeded === 0 || hasEnoughCredits;
 
-  // Feature access - ALL ENABLED FOR TESTING
-  const canUseVideo = true; // canUseFeature(plan, "video");
-  const canUseDocument = true; // plan === "premium";
-  const canUseAI = true; // plan === "premium";
-  const languageRestricted = false; // plan === "free" && formData.language !== "English";
+  // Feature access based on plan
+  const canUseVideo = canUseFeature(plan, "video");
+  const canUseDocument = plan === "premium";
+  const canUseAI = plan === "premium";
+  const canUseMultiLanguage = plan !== "free";
+  const languageRestricted = plan === "free" && formData.language !== "English";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -137,7 +138,15 @@ const CreateWish = () => {
   };
 
   const handlePhotoSelect = (file: File) => {
-    // ⚠️ TESTING MODE: No image limit
+    // Image limit for free plan
+    if (plan === "free" && photoFile) {
+      toast({
+        title: "Image Limit Reached",
+        description: "Free plan allows only 1 image. Upgrade to Basic for unlimited images.",
+        variant: "destructive",
+      });
+      return;
+    }
     setPhotoFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPhotoPreview(reader.result as string);
@@ -145,13 +154,27 @@ const CreateWish = () => {
   };
 
   const handleVideoSelect = (file: File) => {
-    // ⚠️ TESTING MODE: Video enabled for all
+    if (!canUseVideo) {
+      toast({
+        title: "Pro Feature 🎥",
+        description: "Video messages are available on Pro plan and above.",
+        variant: "destructive",
+      });
+      return;
+    }
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
   };
 
   const handleDocumentSelect = (file: File) => {
-    // ⚠️ TESTING MODE: Document enabled for all
+    if (!canUseDocument) {
+      toast({
+        title: "Premium Feature 📄",
+        description: "Document messages are available on Premium plan only.",
+        variant: "destructive",
+      });
+      return;
+    }
     setDocumentFile(file);
     setDocumentPreview({
       name: file.name,
@@ -237,7 +260,44 @@ const CreateWish = () => {
       return;
     }
 
-    // ⚠️ TESTING MODE: All restrictions disabled
+    // Check credits
+    if (!hasEnoughCredits) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need ${creditsNeeded} credits but only have ${credits}. Please upgrade your plan.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check language restriction
+    if (languageRestricted) {
+      toast({
+        title: "Language Restricted",
+        description: "Free plan only supports English. Upgrade to Basic for all languages.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check feature access
+    if (videoFile && !canUseVideo) {
+      toast({
+        title: "Video Not Available",
+        description: "Video messages require Pro plan or above.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (documentFile && !canUseDocument) {
+      toast({
+        title: "Document Not Available",
+        description: "Document messages require Premium plan.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -267,11 +327,20 @@ const CreateWish = () => {
 
       if (wishError) throw wishError;
 
-      // ⚠️ TESTING MODE: Credits not deducted
+      // Deduct credits
+      const newCredits = credits - creditsNeeded;
+      const { error: creditError } = await supabase
+        .from("profiles")
+        .update({ credits: newCredits })
+        .eq("user_id", user.id);
+
+      if (creditError) {
+        console.error("Failed to deduct credits:", creditError);
+      }
 
       toast({
         title: "🎉 Your wish is scheduled successfully!",
-        description: "Testing mode - no credits deducted.",
+        description: `${creditsNeeded} credits used. ${newCredits} credits remaining.`,
       });
       navigate("/dashboard");
     } catch (error) {
@@ -529,9 +598,8 @@ const CreateWish = () => {
 
               {/* Media Upload */}
               <MediaUpload
-                // TESTING MODE: unlock all media without add-ons/payment prompts
-                userPlan="gold"
-                testingMode
+                userPlan={plan}
+                testingMode={false}
                 photoPreview={photoPreview}
                 videoPreview={videoPreview}
                 documentPreview={documentPreview}

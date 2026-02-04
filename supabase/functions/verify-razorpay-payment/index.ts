@@ -12,6 +12,11 @@ const PLANS = {
   premium: { credits: 80 },
 };
 
+const TOP_UPS = {
+  topup10: { credits: 10 },
+  topup15: { credits: 15 },
+};
+
 async function verifySignature(
   orderId: string,
   paymentId: string,
@@ -40,7 +45,7 @@ serve(async (req) => {
   }
 
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan, userId } = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan, userId, isTopUp } = await req.json();
 
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -73,6 +78,60 @@ serve(async (req) => {
     console.log("Payment verified successfully:", razorpay_payment_id);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Handle top-up purchases
+    if (isTopUp) {
+      const topUpDetails = TOP_UPS[plan as keyof typeof TOP_UPS];
+      if (!topUpDetails) {
+        return new Response(
+          JSON.stringify({ error: "Invalid top-up option" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const topUpAmounts = { topup10: 3000, topup15: 4500 };
+      
+      // Record payment
+      await supabase.from("payments").insert({
+        user_id: userId,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        amount: topUpAmounts[plan as keyof typeof topUpAmounts],
+        currency: "INR",
+        plan: `topup_${topUpDetails.credits}`,
+        credits_purchased: topUpDetails.credits,
+        status: "completed",
+      });
+
+      // Get current credits and add top-up
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("user_id", userId)
+        .single();
+
+      const currentCredits = profile?.credits || 0;
+
+      await supabase
+        .from("profiles")
+        .update({ credits: currentCredits + topUpDetails.credits })
+        .eq("user_id", userId);
+
+      console.log(`User ${userId} topped up ${topUpDetails.credits} credits`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Top-up successful",
+          creditsAdded: topUpDetails.credits,
+          isTopUp: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle plan purchases
     const planDetails = PLANS[plan as keyof typeof PLANS];
 
     if (!planDetails) {
@@ -82,14 +141,14 @@ serve(async (req) => {
       );
     }
 
-    // Record payment - TEST PRICES
-    const testAmounts = { basic: 100, pro: 200, premium: 300 };
+    // PRODUCTION PRICES
+    const planAmounts = { basic: 4900, pro: 9900, premium: 19900 };
     const { error: paymentError } = await supabase.from("payments").insert({
       user_id: userId,
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      amount: testAmounts[plan as keyof typeof testAmounts] || 100,
+      amount: planAmounts[plan as keyof typeof planAmounts] || 4900,
       currency: "INR",
       plan,
       credits_purchased: planDetails.credits,
