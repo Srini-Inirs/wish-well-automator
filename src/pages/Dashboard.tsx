@@ -478,19 +478,19 @@ const Dashboard = () => {
           {/* Right Column - Stats + Wishes */}
           <div className="lg:col-span-2 space-y-6">
             {/* Stats Grid */}
-            <div className="grid sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-card rounded-2xl p-4 border border-border/50 shadow-soft"
+                className="bg-card rounded-xl p-4 border border-border/50 shadow-soft"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-light flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-indigo-light flex items-center justify-center flex-shrink-0">
                     <Send className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold text-foreground">{wishes.length}</div>
+                  <div className="min-w-0">
+                    <div className="text-2xl font-bold text-foreground">{profile?.wishes_sent_count || sentWishes.length}</div>
                     <div className="text-xs text-muted-foreground">Total Sent</div>
                   </div>
                 </div>
@@ -500,13 +500,13 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-card rounded-2xl p-4 border border-border/50 shadow-soft"
+                className="bg-card rounded-xl p-4 border border-border/50 shadow-soft"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-pink-soft flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-pink-soft flex items-center justify-center flex-shrink-0">
                     <Clock className="w-5 h-5 text-pink-vibrant" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-2xl font-bold text-foreground">{scheduledWishes.length}</div>
                     <div className="text-xs text-muted-foreground">Upcoming</div>
                   </div>
@@ -517,15 +517,15 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-card rounded-2xl p-4 border border-border/50 shadow-soft"
+                className="bg-card rounded-xl p-4 border border-border/50 shadow-soft"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-whatsapp-light flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-whatsapp-light flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="w-5 h-5 text-accent" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-2xl font-bold text-foreground">{sentWishes.length}</div>
-                    <div className="text-xs text-muted-foreground">Sent</div>
+                    <div className="text-xs text-muted-foreground">Delivered</div>
                   </div>
                 </div>
               </motion.div>
@@ -534,13 +534,13 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="bg-card rounded-2xl p-4 border border-border/50 shadow-soft"
+                className="bg-card rounded-xl p-4 border border-border/50 shadow-soft"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gold/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
                     <Coins className="w-5 h-5 text-gold" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-2xl font-bold text-foreground">{credits}</div>
                     <div className="text-xs text-muted-foreground">Credits Left</div>
                   </div>

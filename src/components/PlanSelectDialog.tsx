@@ -17,7 +17,7 @@ interface Plan {
 const plans: Plan[] = [
   {
     name: "Basic",
-    price: "₹1",
+    price: "₹49",
     period: "/month",
     description: "For regular wishers",
     credits: 15,
@@ -31,7 +31,7 @@ const plans: Plan[] = [
   },
   {
     name: "Pro",
-    price: "₹2",
+    price: "₹99",
     period: "/month",
     description: "For power users",
     credits: 35,
@@ -46,7 +46,7 @@ const plans: Plan[] = [
   },
   {
     name: "Premium",
-    price: "₹3",
+    price: "₹199",
     period: "/month",
     description: "Unlimited magic",
     credits: 80,
