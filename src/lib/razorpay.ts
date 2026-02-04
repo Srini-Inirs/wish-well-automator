@@ -7,11 +7,12 @@ declare global {
 }
 
 interface PaymentOptions {
-  plan: "basic" | "pro" | "premium";
+  plan: "basic" | "pro" | "premium" | "topup10" | "topup15";
   userId: string;
   userEmail: string;
   userName?: string;
-  onSuccess: (plan: string, credits: number) => void;
+  isTopUp?: boolean;
+  onSuccess: (plan: string, credits: number, isTopUp?: boolean) => void;
   onError: (error: string) => void;
 }
 
@@ -20,13 +21,14 @@ export async function initiatePayment({
   userId,
   userEmail,
   userName,
+  isTopUp = false,
   onSuccess,
   onError,
 }: PaymentOptions) {
   try {
     // Create order via edge function
     const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
-      body: { plan, userId },
+      body: { plan, userId, isTopUp },
     });
 
     if (error || data?.error) {
@@ -46,12 +48,16 @@ export async function initiatePayment({
       });
     }
 
+    const planLabel = isTopUp 
+      ? `Quick Top-up - ${credits} Credits`
+      : `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan - ${credits} Credits`;
+
     const options = {
       key: keyId,
       amount,
       currency: "INR",
       name: "WishBird",
-      description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan - ${credits} Credits`,
+      description: planLabel,
       order_id: orderId,
       handler: async function (response: any) {
         try {
@@ -65,6 +71,7 @@ export async function initiatePayment({
                 razorpay_signature: response.razorpay_signature,
                 plan,
                 userId,
+                isTopUp,
               },
             }
           );
@@ -73,7 +80,7 @@ export async function initiatePayment({
             throw new Error(verifyData?.error || "Payment verification failed");
           }
 
-          onSuccess(plan, credits);
+          onSuccess(plan, credits, isTopUp);
         } catch (err) {
           onError(err instanceof Error ? err.message : "Payment verification failed");
         }

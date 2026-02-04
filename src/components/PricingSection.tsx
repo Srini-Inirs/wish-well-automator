@@ -32,7 +32,7 @@ const plans = [
   },
   {
     name: "Basic",
-    price: "₹1",
+    price: "₹49",
     period: "/month",
     description: "For regular wishers",
     helper: "15 credits per month",
@@ -53,7 +53,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "₹2",
+    price: "₹99",
     period: "/month",
     description: "For power users",
     helper: "35 credits per month",
@@ -74,7 +74,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "₹3",
+    price: "₹199",
     period: "/month",
     description: "Unlimited magic",
     helper: "80 credits + free AI",

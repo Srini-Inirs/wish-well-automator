@@ -191,6 +191,48 @@ const Dashboard = () => {
     }
   };
 
+  const handleTopUp = async (topUpType: "topup10" | "topup15") => {
+    if (!user) return;
+    if (plan === "free") {
+      toast({
+        title: "Upgrade Required",
+        description: "Quick top-up is only available for paid plan users. Please upgrade first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoadingPlan(topUpType);
+
+    try {
+      await initiatePayment({
+        plan: topUpType,
+        userId: user.id,
+        userEmail: user.email || "",
+        userName: profile?.display_name || "",
+        isTopUp: true,
+        onSuccess: (_, addedCredits) => {
+          setProfile((prev) => prev ? {
+            ...prev,
+            credits: (prev.credits || 0) + addedCredits,
+          } : null);
+          toast({
+            title: "🎉 Top-up Successful!",
+            description: `${addedCredits} credits added to your account.`,
+          });
+          setLoadingPlan(null);
+        },
+        onError: (error) => {
+          toast({ title: "Top-up Failed", description: error, variant: "destructive" });
+          setLoadingPlan(null);
+        },
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to initiate top-up", variant: "destructive" });
+      setLoadingPlan(null);
+    }
+  };
+
   const openUpgradeDialog = () => {
     setShowPlanDialog(true);
   };
@@ -505,6 +547,55 @@ const Dashboard = () => {
                 </div>
               </motion.div>
             </div>
+
+            {/* Quick Top-up (only for paid users) */}
+            {plan !== "free" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28 }}
+                className="bg-card rounded-2xl p-4 border border-border/50 shadow-soft"
+              >
+                <h3 className="font-bold text-sm text-foreground mb-3 flex items-center gap-2">
+                  ⚡ Quick Top-up
+                </h3>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-auto py-3 flex flex-col items-center gap-1 border-gold/30 hover:border-gold hover:bg-gold/5"
+                    onClick={() => handleTopUp("topup10")}
+                    disabled={loadingPlan === "topup10"}
+                  >
+                    {loadingPlan === "topup10" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span className="text-lg font-bold text-foreground">₹30</span>
+                        <span className="text-xs text-muted-foreground">10 credits</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-auto py-3 flex flex-col items-center gap-1 border-gold hover:border-gold hover:bg-gold/10 relative overflow-hidden"
+                    onClick={() => handleTopUp("topup15")}
+                    disabled={loadingPlan === "topup15"}
+                  >
+                    <span className="absolute -top-1 -right-1 bg-gold text-foreground text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">
+                      ⭐ Best Value
+                    </span>
+                    {loadingPlan === "topup15" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span className="text-lg font-bold text-foreground">₹45</span>
+                        <span className="text-xs text-muted-foreground">15 credits</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
 
             {/* Create Wish CTA */}
             <motion.div
