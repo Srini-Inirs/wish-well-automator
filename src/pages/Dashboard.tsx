@@ -73,6 +73,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingWishes, setLoadingWishes] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({ displayName: "" });
@@ -107,6 +108,8 @@ const Dashboard = () => {
         displayName: profileResult.data.display_name || "",
       });
     }
+    setLoadingProfile(false);
+    
     if (wishesResult.data) setWishes(wishesResult.data);
     if (wishesResult.error) {
       toast({ title: "Error", description: "Failed to load wishes", variant: "destructive" });
@@ -258,7 +261,10 @@ const Dashboard = () => {
 
   const planBadge = getPlanBadge(plan);
 
-  if (loading) {
+  // Derive display name: profile display_name > email prefix
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "";
+
+  if (loading || loadingProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <img src={wishbirdLogo} alt="Loading..." className="w-12 h-12 animate-pulse" />
@@ -296,7 +302,7 @@ const Dashboard = () => {
         >
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-1">
-              👋 Hi, {profile?.display_name || user?.email?.split("@")[0]}
+              👋 Hi, {displayName}
             </h1>
             <p className="text-muted-foreground">
               Let's make someone smile today 💜
