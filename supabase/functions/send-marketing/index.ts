@@ -60,7 +60,7 @@ async function sendMarketingTemplate(phone: string, mediaId: string): Promise<an
     type: 'template',
     template: {
       name: 'whats_mark',
-      language: { code: 'en_US' },
+      language: { code: 'en' },
       components: [
         {
           type: 'header',
