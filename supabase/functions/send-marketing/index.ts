@@ -59,7 +59,7 @@ async function sendMarketingTemplate(phone: string, mediaId: string): Promise<an
     to: formatPhoneNumber(phone),
     type: 'template',
     template: {
-      name: 'marketing_temp',
+      name: 'whats_mark',
       language: { code: 'en_US' },
       components: [
         {
