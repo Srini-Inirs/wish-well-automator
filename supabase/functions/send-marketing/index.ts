@@ -13,13 +13,16 @@ const IMAGE_URL = "https://tdkrsgaauvsyvryyzrim.supabase.co/storage/v1/object/pu
 
 function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, '');
-  if (cleaned.startsWith('0')) cleaned = '91' + cleaned.substring(1);
-  if (cleaned.length === 10) cleaned = '91' + cleaned;
+  // Numbers already have country code (91xxx)
   return cleaned;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function uploadMediaToMeta(imageUrl: string): Promise<string> {
-  console.log(`📤 Downloading image from storage...`);
+  console.log(`📤 Uploading image to Meta...`);
   const mediaResponse = await fetch(imageUrl);
   if (!mediaResponse.ok) {
     throw new Error(`Failed to download image: ${mediaResponse.status}`);
@@ -43,7 +46,7 @@ async function uploadMediaToMeta(imageUrl: string): Promise<string> {
   if (!response.ok) {
     throw new Error(`Media upload failed: ${data.error?.message || JSON.stringify(data)}`);
   }
-  console.log(`✅ Media uploaded to Meta, ID: ${data.id}`);
+  console.log(`✅ Media uploaded, ID: ${data.id}`);
   return data.id;
 }
 
@@ -69,8 +72,6 @@ async function sendMarketingTemplate(phone: string, mediaId: string): Promise<an
     },
   };
 
-  console.log(`📤 Sending marketing_temp to ${phone}...`);
-
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -83,11 +84,9 @@ async function sendMarketingTemplate(phone: string, mediaId: string): Promise<an
   const data = await response.json();
 
   if (!response.ok) {
-    console.error(`❌ Failed for ${phone}:`, JSON.stringify(data));
     return { phone, success: false, error: data.error?.message || JSON.stringify(data) };
   }
 
-  console.log(`✅ Sent to ${phone}, message ID: ${data.messages?.[0]?.id}`);
   return { phone, success: true, messageId: data.messages?.[0]?.id };
 }
 
@@ -97,21 +96,51 @@ serve(async (req) => {
   }
 
   try {
-    // Step 1: Upload image to Meta
-    const mediaId = await uploadMediaToMeta(IMAGE_URL);
+    const body = await req.json().catch(() => ({}));
+    const phones: string[] = body.phones || [];
+    const mediaId: string | null = body.mediaId || null;
+    const delayMs: number = body.delayMs || 2000;
 
-    // Step 2: Send to both numbers
-    const phones = ['9566848767', '8667487210'];
-    const results = [];
-
-    for (const phone of phones) {
-      const result = await sendMarketingTemplate(phone, mediaId);
-      results.push(result);
+    if (phones.length === 0) {
+      return new Response(JSON.stringify({ error: 'No phones provided' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('📊 Results:', JSON.stringify(results));
+    // Upload image if no mediaId provided
+    const resolvedMediaId = mediaId || await uploadMediaToMeta(IMAGE_URL);
 
-    return new Response(JSON.stringify({ results }), {
+    console.log(`📨 Sending to ${phones.length} contacts with ${delayMs}ms delay...`);
+
+    const results = [];
+    for (let i = 0; i < phones.length; i++) {
+      const phone = phones[i];
+      console.log(`[${i + 1}/${phones.length}] Sending to ${phone}...`);
+      
+      const result = await sendMarketingTemplate(phone, resolvedMediaId);
+      results.push(result);
+      
+      console.log(`   ${result.success ? '✅' : '❌'} ${phone}: ${result.success ? result.messageId : result.error}`);
+
+      // Delay between messages (skip after last one)
+      if (i < phones.length - 1) {
+        console.log(`   ⏳ Waiting ${delayMs / 1000}s...`);
+        await sleep(delayMs);
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    console.log(`\n📊 Done: ${successCount} sent, ${failCount} failed`);
+
+    return new Response(JSON.stringify({ 
+      mediaId: resolvedMediaId,
+      total: phones.length,
+      success: successCount,
+      failed: failCount,
+      results 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
