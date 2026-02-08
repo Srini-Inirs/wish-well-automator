@@ -26,7 +26,7 @@ async function sendMarketingTemplate(phone: string): Promise<any> {
     type: 'template',
     template: {
       name: 'marketing_temp',
-      language: { code: 'en' },
+      language: { code: 'en_US' },
     },
   };
 
